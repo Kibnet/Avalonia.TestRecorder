@@ -68,6 +68,17 @@ dotnet run
 
 ### 2. Recording Workflow
 
+**Overlay Panel:**
+
+When the recorder is attached, a compact overlay panel appears at the top of your window with:
+- 🔴 **Status indicator** - Shows current state (Off/Recording/Paused)
+- **Step counter** - Number of recorded steps
+- ▶️ **Record/Stop button** - Toggle recording
+- ⏸️ **Pause button** - Pause/resume recording
+- 🗑️ **Clear button** - Reset recorded steps
+- 💾 **Save button** - Save test to file with file picker dialog
+- ✕ **Close button** - Hide the overlay
+
 **Hotkeys:**
 - `Ctrl+Shift+R` - Start/Stop recording
 - `Ctrl+Shift+P` - Pause/Resume
@@ -76,11 +87,12 @@ dotnet run
 
 **Steps:**
 1. Launch your app with recording enabled
-2. Press `Ctrl+Shift+R` to start recording (if not auto-started)
-3. Perform your test scenario (click buttons, enter text, etc.)
-4. **Hover your mouse over the element** you want to assert, then press `Ctrl+Shift+A` to capture its state
-5. Press `Ctrl+Shift+S` to save the generated test file
-6. Find your test in the configured output directory (default: `./RecordedTests`)
+2. The overlay panel appears at the top of the window
+3. Click the ▶️ button or press `Ctrl+Shift+R` to start recording
+4. Perform your test scenario (click buttons, enter text, etc.)
+5. **Hover your mouse over the element** you want to assert, then press `Ctrl+Shift+A` to capture its state
+6. Click the 💾 button or press `Ctrl+Shift+S` to save - a file picker dialog will appear
+7. Choose the location and filename for your test file
 
 ### 3. Writing Headless Tests
 

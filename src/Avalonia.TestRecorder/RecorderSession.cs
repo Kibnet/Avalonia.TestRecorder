@@ -14,7 +14,7 @@ namespace Avalonia.TestRecorder;
 /// <summary>
 /// Implementation of recorder session.
 /// </summary>
-internal sealed class RecorderSession : IRecorderSession
+public sealed class RecorderSession : IRecorderSession
 {
     private readonly Window _window;
     private readonly RecorderOptions _options;
@@ -31,6 +31,11 @@ internal sealed class RecorderSession : IRecorderSession
     private Control? _lastHoveredControl;
 
     public RecorderState State => _state;
+
+    /// <summary>
+    /// Gets the current step count.
+    /// </summary>
+    public int GetStepCount() => _steps.Count;
 
     public RecorderSession(Window window, RecorderOptions options)
     {
@@ -73,9 +78,18 @@ internal sealed class RecorderSession : IRecorderSession
         {
             FlushTextInput();
             _state = RecorderState.Off;
-            _steps.Clear();
-            _logger?.LogInformation("Recording stopped, steps cleared");
+            _logger?.LogInformation("Recording stopped");
         }
+    }
+
+    /// <summary>
+    /// Clears all recorded steps.
+    /// </summary>
+    public void ClearSteps()
+    {
+        FlushTextInput();
+        _steps.Clear();
+        _logger?.LogInformation("Steps cleared");
     }
 
     public void Pause()
@@ -99,22 +113,45 @@ internal sealed class RecorderSession : IRecorderSession
 
     public string SaveTestToFile()
     {
-        FlushTextInput();
-        var code = ExportTestCode();
-        
         var outputDir = _options.OutputDirectory 
             ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RecordedTests");
         Directory.CreateDirectory(outputDir);
 
-        var appName = Assembly.GetEntryAssembly()?.GetName().Name ?? "App";
-        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var fileName = $"{appName}.{_options.ScenarioName}.{timestamp}.g.cs";
+        var fileName = GetSuggestedFileName();
         var filePath = Path.Combine(outputDir, fileName);
+
+        return SaveTestToFile(filePath);
+    }
+
+    /// <summary>
+    /// Saves the test code to the specified file path.
+    /// </summary>
+    public string SaveTestToFile(string filePath)
+    {
+        FlushTextInput();
+        var code = ExportTestCode();
+        
+        // Ensure directory exists
+        var directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
 
         File.WriteAllText(filePath, code);
         _logger?.LogInformation("Test saved to: {FilePath}", filePath);
 
         return filePath;
+    }
+
+    /// <summary>
+    /// Gets the suggested file name for the test.
+    /// </summary>
+    public string GetSuggestedFileName()
+    {
+        var appName = Assembly.GetEntryAssembly()?.GetName().Name ?? "App";
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        return $"{appName}.{_options.ScenarioName}.{timestamp}.g.cs";
     }
 
     public string ExportTestCode()

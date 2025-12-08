@@ -41,6 +41,12 @@ public sealed class RecorderOptions
     public IList<IAssertValueExtractor> AssertExtractors { get; } = new List<IAssertValueExtractor>();
 
     /// <summary>
+    /// Gets or sets whether to show the overlay panel.
+    /// Default is true.
+    /// </summary>
+    public bool ShowOverlay { get; init; } = true;
+
+    /// <summary>
     /// Gets or sets the logger for diagnostic output.
     /// </summary>
     public ILogger? Logger { get; init; }

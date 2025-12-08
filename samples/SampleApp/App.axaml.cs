@@ -43,7 +43,7 @@ public partial class App : Application
                 var options = new RecorderOptions
                 {
                     OutputDirectory = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RecordedTests"),
-                    ScenarioName = "LoginFlow"
+                    ScenarioName = "LoginFlow",                    
                 };
                 
                 var session = TestRecorder.Attach(mainWindow, options);
