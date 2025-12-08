@@ -37,12 +37,17 @@ internal sealed class SelectorResolver
 
     private (string Selector, SelectorQuality Quality, string? Warning) ResolveCore(Control control)
     {
-        // Priority 1: AutomationId
-        var automationId = AutomationProperties.GetAutomationId(control);
-        if (!string.IsNullOrEmpty(automationId))
+        // Try to find the nearest parent with AutomationId first
+        // This handles cases where inner template elements receive events
+        var controlWithId = FindControlWithAutomationId(control);
+        if (controlWithId != null)
         {
-            _logger?.LogDebug("Resolved selector via AutomationId: {AutomationId}", automationId);
-            return (automationId, SelectorQuality.High, null);
+            var automationId = AutomationProperties.GetAutomationId(controlWithId);
+            if (!string.IsNullOrEmpty(automationId))
+            {
+                _logger?.LogDebug("Resolved selector via AutomationId: {AutomationId}", automationId);
+                return (automationId, SelectorQuality.High, null);
+            }
         }
 
         // Priority 2: Name property (if preferred)
@@ -66,6 +71,35 @@ internal sealed class SelectorResolver
         var fallback = $"{control.GetType().Name}_NoId";
         _logger?.LogError("Could not resolve stable selector for control: {Type}", control.GetType().Name);
         return (fallback, SelectorQuality.Low, "ERROR: No stable selector available");
+    }
+
+    /// <summary>
+    /// Walks up the visual tree to find the nearest control with AutomationId.
+    /// This handles cases where events bubble up from inner template elements.
+    /// </summary>
+    private Control? FindControlWithAutomationId(Control startControl)
+    {
+        var current = startControl as Visual;
+        
+        while (current != null)
+        {
+            if (current is Control ctrl)
+            {
+                var automationId = AutomationProperties.GetAutomationId(ctrl);
+                if (!string.IsNullOrEmpty(automationId))
+                {
+                    return ctrl;
+                }
+            }
+            
+            current = current.GetVisualParent();
+            
+            // Stop at Window boundary
+            if (current is Window)
+                break;
+        }
+        
+        return null;
     }
 
     private string GenerateTreePath(Control control)

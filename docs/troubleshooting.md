@@ -33,6 +33,55 @@ This fix is already included in the current version of `Avalonia.TestRecorder`.
 
 ---
 
+### Recorder Captures Inner Template Elements Instead of Control
+
+**Symptom:**
+When clicking on a TextBox with AutomationId set, the recorder captures the inner TextBlock from the control template with a long tree path fallback selector instead of using the TextBox's AutomationId.
+
+**Cause:**
+Events bubble up from inner template elements (like the TextBlock inside a TextBox template). The event source is the inner element, not the control you clicked on.
+
+**Solution:**
+The `SelectorResolver` now walks up the visual tree to find the nearest parent control with an AutomationId:
+
+```csharp
+private Control? FindControlWithAutomationId(Control startControl)
+{
+    var current = startControl as Visual;
+    
+    while (current != null)
+    {
+        if (current is Control ctrl)
+        {
+            var automationId = AutomationProperties.GetAutomationId(ctrl);
+            if (!string.IsNullOrEmpty(automationId))
+            {
+                return ctrl;  // Found parent with AutomationId!
+            }
+        }
+        
+        current = current.GetVisualParent();
+        if (current is Window) break;
+    }
+    
+    return null;
+}
+```
+
+This ensures that even when clicking on inner template parts, the recorder will find and use the parent control's AutomationId.
+
+**Example:**
+```xml
+<TextBox AutomationProperties.AutomationId="usernameField">
+    <!-- Inner template contains TextBlock, ScrollViewer, etc. -->
+    <!-- Events from these elements now resolve to "usernameField" -->
+</TextBox>
+```
+
+This fix is already included in the current version.
+
+---
+
 ### Tests Fail with "Control not found"
 
 **Symptom:**
