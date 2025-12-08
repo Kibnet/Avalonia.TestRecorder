@@ -72,13 +72,13 @@ dotnet run
 - `Ctrl+Shift+R` - Start/Stop recording
 - `Ctrl+Shift+P` - Pause/Resume
 - `Ctrl+Shift+S` - Save test to file
-- `Ctrl+Shift+A` - Capture assertion from focused/hovered element
+- `Ctrl+Shift+A` - Capture assertion from element **under mouse cursor** (or focused element as fallback)
 
 **Steps:**
 1. Launch your app with recording enabled
 2. Press `Ctrl+Shift+R` to start recording (if not auto-started)
 3. Perform your test scenario (click buttons, enter text, etc.)
-4. Press `Ctrl+Shift+A` to capture assertions on UI elements
+4. **Hover your mouse over the element** you want to assert, then press `Ctrl+Shift+A` to capture its state
 5. Press `Ctrl+Shift+S` to save the generated test file
 6. Find your test in the configured output directory (default: `./RecordedTests`)
 

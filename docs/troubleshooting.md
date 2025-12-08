@@ -82,6 +82,57 @@ This fix is already included in the current version.
 
 ---
 
+### Assertion Capture Using Wrong Element
+
+**Symptom:**
+When pressing Ctrl+Shift+A to capture an assertion, the recorder captures the wrong element (e.g., captures focused element instead of the element under mouse cursor).
+
+**Cause:**
+Previous implementation only used the focused element, ignoring the mouse cursor position.
+
+**Solution:**
+The `GetTargetControl()` method now uses a prioritized approach:
+
+1. **Priority 1: Control under mouse pointer** (most recent hover)
+   - Tracks the last control that received `PointerMoved` event
+   - Most intuitive - captures what you're pointing at
+
+2. **Priority 2: Hit testing at pointer position**
+   - Performs `InputHitTest` at last known mouse position
+   - Finds control even if no recent hover events
+
+3. **Priority 3: Focused control** (fallback)
+   - Uses focused element only if mouse position is unknown
+   - Maintains backward compatibility
+
+**Implementation:**
+```csharp
+private Control? GetTargetControl()
+{
+    // Priority 1: Control under mouse pointer
+    if (_lastHoveredControl != null)
+        return _lastHoveredControl;
+
+    // Priority 2: Hit test at pointer position
+    var controlAtPointer = FindControlAtPosition(_lastPointerPosition);
+    if (controlAtPointer != null)
+        return controlAtPointer;
+
+    // Priority 3: Focused control (fallback)
+    var focused = TopLevel.GetTopLevel(_window)?.FocusManager?.GetFocusedElement() as Control;
+    return focused;
+}
+```
+
+**Usage:**
+1. Move mouse over the element you want to assert
+2. Press `Ctrl+Shift+A`
+3. Recorder captures assertion for the element under your mouse cursor
+
+This fix is already included in the current version.
+
+---
+
 ### Tests Fail with "Control not found"
 
 **Symptom:**

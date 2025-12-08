@@ -27,6 +27,8 @@ internal sealed class RecorderSession : IRecorderSession
     private readonly System.Timers.Timer? _textInputTimer;
     private Control? _lastTextControl;
     private string _accumulatedText = string.Empty;
+    private Point _lastPointerPosition;
+    private Control? _lastHoveredControl;
 
     public RecorderState State => _state;
 
@@ -131,6 +133,7 @@ internal sealed class RecorderSession : IRecorderSession
     private void AttachEventHandlers()
     {
         _window.AddHandler(InputElement.PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel);
+        _window.AddHandler(InputElement.PointerMovedEvent, OnPointerMoved, RoutingStrategies.Tunnel);
         _window.AddHandler(InputElement.TextInputEvent, OnTextInput, RoutingStrategies.Tunnel);
         _window.AddHandler(InputElement.KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
     }
@@ -138,6 +141,7 @@ internal sealed class RecorderSession : IRecorderSession
     private void DetachEventHandlers()
     {
         _window.RemoveHandler(InputElement.PointerPressedEvent, OnPointerPressed);
+        _window.RemoveHandler(InputElement.PointerMovedEvent, OnPointerMoved);
         _window.RemoveHandler(InputElement.TextInputEvent, OnTextInput);
         _window.RemoveHandler(InputElement.KeyDownEvent, OnKeyDown);
     }
@@ -152,6 +156,10 @@ internal sealed class RecorderSession : IRecorderSession
         var control = e.Source as Control;
         if (control == null)
             return;
+
+        // Update pointer position and hovered control
+        _lastPointerPosition = e.GetPosition(_window);
+        _lastHoveredControl = control;
 
         var (selector, quality, warning) = _selectorResolver.Resolve(control);
         
@@ -169,6 +177,21 @@ internal sealed class RecorderSession : IRecorderSession
 
         _steps.Add(step);
         _logger?.LogDebug("Recorded {StepType}: {Selector}", stepType, selector);
+    }
+
+    private void OnPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_state != RecorderState.Recording)
+            return;
+
+        // Update last known pointer position and control under pointer
+        _lastPointerPosition = e.GetPosition(_window);
+        
+        // Store the control under pointer for assertion capture
+        if (e.Source is Control control)
+        {
+            _lastHoveredControl = control;
+        }
     }
 
     private void OnTextInput(object? sender, TextInputEventArgs e)
@@ -307,13 +330,62 @@ internal sealed class RecorderSession : IRecorderSession
 
     private Control? GetTargetControl()
     {
-        // Try focused control first
+        // Priority 1: Control under mouse pointer (most recent hover)
+        if (_lastHoveredControl != null)
+        {
+            _logger?.LogDebug("Using hovered control for assertion: {Type}", _lastHoveredControl.GetType().Name);
+            return _lastHoveredControl;
+        }
+
+        // Priority 2: Try to find control at last pointer position using hit testing
+        var controlAtPointer = FindControlAtPosition(_lastPointerPosition);
+        if (controlAtPointer != null)
+        {
+            _logger?.LogDebug("Found control at pointer position: {Type}", controlAtPointer.GetType().Name);
+            return controlAtPointer;
+        }
+
+        // Priority 3: Focused control as fallback
         var focused = TopLevel.GetTopLevel(_window)?.FocusManager?.GetFocusedElement() as Control;
         if (focused != null)
+        {
+            _logger?.LogDebug("Using focused control for assertion: {Type}", focused.GetType().Name);
             return focused;
+        }
 
-        // Fallback: try to get control under mouse pointer
-        // Note: This is simplified; real implementation would need pointer position
+        _logger?.LogWarning("No target control found for assertion capture");
+        return null;
+    }
+
+    private Control? FindControlAtPosition(Point position)
+    {
+        try
+        {
+            // Perform hit testing to find control at the given position
+            var hitTestResult = _window.InputHitTest(position);
+            
+            if (hitTestResult is Control control)
+            {
+                return control;
+            }
+            
+            // If hit test returns a visual that's not a control, walk up to find the parent control
+            if (hitTestResult is Visual visual)
+            {
+                var parent = visual.GetVisualParent();
+                while (parent != null)
+                {
+                    if (parent is Control parentControl)
+                        return parentControl;
+                    parent = parent.GetVisualParent();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error finding control at position {Position}", position);
+        }
+        
         return null;
     }
 }
