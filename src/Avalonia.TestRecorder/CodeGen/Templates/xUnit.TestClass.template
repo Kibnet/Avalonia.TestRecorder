@@ -1,0 +1,21 @@
+using Avalonia.Headless.XUnit;
+using Avalonia.HeadlessTestKit;
+using Xunit;
+
+namespace {Namespace};
+
+public class {ClassName}
+{
+    [AvaloniaFact]
+    public void {TestMethod}()
+    {
+        // TODO: Initialize your application and window here
+        // Example:
+        // var window = new MainWindow();
+        // window.Show();
+        
+        var ui = new Ui(window);
+        
+{Steps}
+    }
+}
