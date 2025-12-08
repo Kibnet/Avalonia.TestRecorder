@@ -45,10 +45,15 @@ Displays the number of steps currently recorded in the session (e.g., "5 steps")
 - **Enabled**: Only when steps are recorded
 - **Hotkey**: Ctrl+Shift+S
 
-#### 5. Close Button (✕)
-- **Icon**: X symbol
-- **Action**: Hides the overlay panel
-- **Note**: The recorder session continues running; only the UI is hidden
+#### 5. Minimize Button (➖)
+- **Icon**: Minus symbol
+- **Action**: Minimizes the overlay to a small button that can be restored
+- **Note**: The recorder session continues running; only the UI is minimized
+
+#### 6. Restore Button (➕)
+- **Icon**: Plus symbol
+- **Action**: Restores the overlay to its full size
+- **Note**: Appears only when the overlay is minimized
 
 ## Configuration
 
@@ -108,7 +113,9 @@ The overlay is displayed as a **separate modal window** to avoid disrupting the 
 - **Window type**: Separate, frameless, topmost window
 - **Behavior**: Follows the main window when moved, hides when minimized
 - **Z-order**: Always on top (Topmost = true)
-- **Size**: Fixed dimensions (200x40px)
+- **Size**: 
+  - Expanded: 200x40px
+  - Minimized: 200x30px
 - **Styling**: Rounded bottom corners (6px radius) with drop shadow for floating appearance
 - **Transparency**: Transparent background with non-transparent content panel
 
@@ -128,18 +135,19 @@ The overlay is displayed as a **separate modal window** to avoid disrupting the 
 ## Visual Design
 
 **Dimensions:**
-- Height: 40px
+- Expanded Height: 40px
+- Minimized Height: 30px
 - Background: Light gray (#F0F0F0)
 - Border: Bottom border only (#C0C0C0)
-- Button size: 32x32px
-- Icon size: 20x20px
+- Button size: 32x32px (expanded), 30x30px (minimized)
+- Icon size: 20x20px (expanded), 18x18px (minimized)
 
 **Colors:**
 - Record/Play: Green (#27AE60)
 - Stop: Red (#E74C3C)
 - Pause: Orange (#F39C12)
 - Save: Blue (#3498DB)
-- Clear/Close: Gray (#95A5A6)
+- Clear/Minimize/Restore: Gray (#95A5A6)
 
 ## Workflow Example
 
@@ -151,7 +159,8 @@ The overlay is displayed as a **separate modal window** to avoid disrupting the 
 6. **Click 💾** - File picker appears
 7. **Choose location** - Test file is saved
 8. **Click 🗑️** - Step counter resets to 0
-9. **Click ✕** - Overlay hides (session still active)
+9. **Click ➖** - Overlay minimizes to a small button
+10. **Click ➕** - Overlay restores to full size
 
 ## Keyboard-Only Workflow
 
@@ -178,7 +187,8 @@ All button clicks invoke methods on the attached `RecorderSession`:
 - Pause button → `Pause()` or `Resume()`
 - Clear button → `ClearSteps()`
 - Save button → `SaveTestToFile(filePath)` after file picker
-- Close button → Hides overlay (does not affect session)
+- Minimize button → `Minimize()` (does not affect session)
+- Restore button → `Restore()` (does not affect session)
 
 ### File Picker Integration
 
@@ -204,7 +214,7 @@ var file = await window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOp
 ### Overlay Blocks UI Elements
 - The overlay is a separate window, so it won't block any UI elements in the main window
 - If the overlay obscures important content, you can move the main window
-- Click the ✕ button to hide the overlay temporarily
+- Click the ➖ button to minimize the overlay temporarily
 - Consider setting `ShowOverlay = false` and using hotkeys only
 
 ### Save Button Does Nothing
@@ -216,7 +226,7 @@ var file = await window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOp
 
 Potential enhancements not yet implemented:
 - Draggable overlay position
-- Collapsible/expandable panel
+- ~~Collapsible/expandable panel~~ (Implemented: Minimize/Restore functionality)
 - Custom theme colors
 - Configurable button visibility
 - Mini/full mode toggle

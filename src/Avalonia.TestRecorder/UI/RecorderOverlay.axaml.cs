@@ -18,7 +18,8 @@ public partial class RecorderOverlay : UserControl
     private RecorderSession? _session;
     private ILogger? _logger;
     private DispatcherTimer? _updateTimer;
-
+    private bool _isMinimized = false;
+    
     // UI Elements
     private Shape? _iconOff;
     private Shape? _iconRecording;
@@ -28,9 +29,12 @@ public partial class RecorderOverlay : UserControl
     private Button? _pauseButton;
     private Button? _clearButton;
     private Button? _saveButton;
-    private Button? _closeButton;
+    private Button? _minimizeButton;
+    private Button? _restoreButton;
     private Shape? _playIcon;
     private Shape? _stopIcon;
+    private StackPanel? _expandedPanel;
+    private StackPanel? _minimizedPanel;
 
     public RecorderOverlay()
     {
@@ -55,9 +59,12 @@ public partial class RecorderOverlay : UserControl
         _pauseButton = this.FindControl<Button>("PauseButton");
         _clearButton = this.FindControl<Button>("ClearButton");
         _saveButton = this.FindControl<Button>("SaveButton");
-        _closeButton = this.FindControl<Button>("CloseButton");
+        _minimizeButton = this.FindControl<Button>("MinimizeButton");
+        _restoreButton = this.FindControl<Button>("RestoreButton");
         _playIcon = this.FindControl<Shape>("PlayIcon");
         _stopIcon = this.FindControl<Shape>("StopIcon");
+        _expandedPanel = this.FindControl<StackPanel>("ExpandedPanel");
+        _minimizedPanel = this.FindControl<StackPanel>("MinimizedPanel");
 
         // Attach event handlers
         if (_recordButton != null)
@@ -72,8 +79,11 @@ public partial class RecorderOverlay : UserControl
         if (_saveButton != null)
             _saveButton.Click += OnSaveButtonClick;
         
-        if (_closeButton != null)
-            _closeButton.Click += OnCloseButtonClick;
+        if (_minimizeButton != null)
+            _minimizeButton.Click += OnMinimizeButtonClick;
+            
+        if (_restoreButton != null)
+            _restoreButton.Click += OnRestoreButtonClick;
 
         // Setup update timer
         _updateTimer = new DispatcherTimer
@@ -143,6 +153,58 @@ public partial class RecorderOverlay : UserControl
             Classes.Add("dark-theme");
         }
         _logger?.LogDebug("Overlay theme manually set to: {Theme}", isDark ? "Dark" : "Light");
+    }
+    
+    /// <summary>
+    /// Minimizes the overlay to a small button.
+    /// </summary>
+    public void Minimize()
+    {
+        if (_isMinimized) return;
+        
+        _isMinimized = true;
+        Classes.Add("minimized");
+        
+        // Hide expanded panel and show minimized panel
+        if (_expandedPanel != null)
+            _expandedPanel.IsVisible = false;
+            
+        if (_minimizedPanel != null)
+            _minimizedPanel.IsVisible = true;
+            
+        // Update parent window size
+        if (this.Parent is Window window)
+        {
+            window.Height = 30;
+        }
+        
+        _logger?.LogInformation("Overlay minimized");
+    }
+    
+    /// <summary>
+    /// Restores the overlay to its full size.
+    /// </summary>
+    public void Restore()
+    {
+        if (!_isMinimized) return;
+        
+        _isMinimized = false;
+        Classes.Remove("minimized");
+        
+        // Show expanded panel and hide minimized panel
+        if (_expandedPanel != null)
+            _expandedPanel.IsVisible = true;
+            
+        if (_minimizedPanel != null)
+            _minimizedPanel.IsVisible = false;
+            
+        // Update parent window size
+        if (this.Parent is Window window)
+        {
+            window.Height = 40;
+        }
+        
+        _logger?.LogInformation("Overlay restored");
     }
 
     private void OnUpdateTimer(object? sender, EventArgs e)
@@ -281,10 +343,14 @@ public partial class RecorderOverlay : UserControl
         }
     }
 
-    private void OnCloseButtonClick(object? sender, RoutedEventArgs e)
+    private void OnMinimizeButtonClick(object? sender, RoutedEventArgs e)
     {
-        IsVisible = false;
-        _logger?.LogInformation("Overlay hidden");
+        Minimize();
+    }
+    
+    private void OnRestoreButtonClick(object? sender, RoutedEventArgs e)
+    {
+        Restore();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -306,7 +372,10 @@ public partial class RecorderOverlay : UserControl
         if (_saveButton != null)
             _saveButton.Click -= OnSaveButtonClick;
         
-        if (_closeButton != null)
-            _closeButton.Click -= OnCloseButtonClick;
+        if (_minimizeButton != null)
+            _minimizeButton.Click -= OnMinimizeButtonClick;
+            
+        if (_restoreButton != null)
+            _restoreButton.Click -= OnRestoreButtonClick;
     }
 }

@@ -297,6 +297,41 @@ Then re-record the test to get stable selectors.
 
 ---
 
+### Overlay Panel Issues
+
+#### Overlay Panel Not Visible
+
+**Symptom:**
+The overlay panel doesn't appear when the recorder is attached.
+
+**Solutions:**
+1. Verify `ShowOverlay = true` in `RecorderOptions` (this is the default)
+2. Check that the main window has been shown before attaching the recorder
+3. Look for error messages in the application logs
+
+#### Overlay Panel Blocks UI Elements
+
+**Symptom:**
+The overlay panel obscures important UI elements in the main window.
+
+**Solutions:**
+1. Move the main window to reposition the overlay
+2. Minimize the overlay using the minimize button (➖) to reduce its footprint
+3. Click the restore button (➕) when you need access to the full controls
+4. For permanent hiding, set `ShowOverlay = false` in `RecorderOptions` and use hotkeys only
+
+#### Overlay Panel Not Responding
+
+**Symptom:**
+Buttons on the overlay panel don't respond to clicks.
+
+**Solutions:**
+1. Ensure the overlay window has focus by clicking on it
+2. Check that the main window is not frozen or unresponsive
+3. Restart the application if the issue persists
+
+---
+
 ## Getting Help
 
 If you encounter issues not covered here:

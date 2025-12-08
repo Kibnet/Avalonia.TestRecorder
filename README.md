@@ -19,6 +19,7 @@ This project consists of four main components:
 - ✅ **Assertion capture** - Record UI state validations with Ctrl+Shift+A
 - 📝 **Clean DSL** - Fluent, readable test code using the `Ui` helper class
 - ⚡ **Headless execution** - Run tests without visible windows in CI/CD pipelines
+- ➖ **Minimizable overlay** - Collapse the recorder overlay to a small button when not needed
 
 ## Quick Start
 
@@ -77,7 +78,8 @@ When the recorder is attached, a compact overlay panel appears at the top of you
 - ⏸️ **Pause button** - Pause/resume recording
 - 🗑️ **Clear button** - Reset recorded steps
 - 💾 **Save button** - Save test to file with file picker dialog
-- ✕ **Close button** - Hide the overlay
+- ➖ **Minimize button** - Collapse the overlay to a small restore button
+- ➕ **Restore button** - Expand the overlay back to full size (appears when minimized)
 
 **Hotkeys:**
 - `Ctrl+Shift+R` - Start/Stop recording
@@ -91,8 +93,10 @@ When the recorder is attached, a compact overlay panel appears at the top of you
 3. Click the ▶️ button or press `Ctrl+Shift+R` to start recording
 4. Perform your test scenario (click buttons, enter text, etc.)
 5. **Hover your mouse over the element** you want to assert, then press `Ctrl+Shift+A` to capture its state
-6. Click the 💾 button or press `Ctrl+Shift+S` to save - a file picker dialog will appear
-7. Choose the location and filename for your test file
+6. Click the ➖ button to minimize the overlay when you need more screen space
+7. Click the ➕ button to restore the overlay when you need to access controls
+8. Click the 💾 button or press `Ctrl+Shift+S` to save - a file picker dialog will appear
+9. Choose the location and filename for your test file
 
 ### 3. Writing Headless Tests
 
