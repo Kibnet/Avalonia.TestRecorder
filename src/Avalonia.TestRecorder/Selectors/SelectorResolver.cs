@@ -1,5 +1,6 @@
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Microsoft.Extensions.Logging;
 
@@ -21,8 +22,20 @@ internal sealed class SelectorResolver
 
     /// <summary>
     /// Resolves a selector for the given control.
+    /// Must be called on the UI thread or will be dispatched automatically.
     /// </summary>
     public (string Selector, SelectorQuality Quality, string? Warning) Resolve(Control control)
+    {
+        // Ensure we're on the UI thread for all property access
+        if (!Dispatcher.UIThread.CheckAccess())
+        {
+            return Dispatcher.UIThread.Invoke(() => ResolveCore(control));
+        }
+
+        return ResolveCore(control);
+    }
+
+    private (string Selector, SelectorQuality Quality, string? Warning) ResolveCore(Control control)
     {
         // Priority 1: AutomationId
         var automationId = AutomationProperties.GetAutomationId(control);
