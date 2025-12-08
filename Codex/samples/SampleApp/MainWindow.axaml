@@ -1,0 +1,89 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SampleApp"
+        mc:Ignorable="d" d:DesignWidth="960" d:DesignHeight="640"
+        x:Class="SampleApp.MainWindow"
+        x:DataType="local:MainViewModel"
+        Title="Avalonia Test Recorder Sample"
+        Padding="0">
+  <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*,*" Margin="16">
+      <StackPanel Grid.ColumnSpan="2" Spacing="4">
+        <TextBlock Text="Накликал → получил headless тест" FontSize="20" FontWeight="SemiBold" />
+        <TextBlock Text="Запусти приложение с флагом AV_RECORDER=1 или --record-tests, нажми Ctrl+Shift+R для старта записи, Ctrl+Shift+S чтобы сохранить тест." TextWrapping="Wrap" />
+      </StackPanel>
+
+      <Border Grid.Row="1" Grid.Column="0" Margin="0,12,12,12" Padding="12" Background="#111827" CornerRadius="8">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Форма поиска" FontWeight="SemiBold" />
+          <TextBox AutomationProperties.AutomationId="SearchBox"
+                   Name="SearchBox"
+                   Watermark="Что найти?"
+                   Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button AutomationProperties.AutomationId="SubmitButton"
+                    Content="Найти"
+                    MinWidth="120"
+                    Command="{Binding SubmitCommand}" />
+            <Button AutomationProperties.AutomationId="ClearButton"
+                    Content="Очистить"
+                    Command="{Binding ClearCommand}" />
+          </StackPanel>
+          <TextBlock AutomationProperties.AutomationId="StatusText"
+                     Text="{Binding Status}"
+                     FontSize="14"
+                     Foreground="#22d3ee" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="1" Margin="12,12,0,12" Padding="12" Background="#0f172a" CornerRadius="8">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Hover зона" FontWeight="SemiBold" />
+          <Border AutomationProperties.AutomationId="HoverTarget"
+                  Name="HoverTarget"
+                  Background="#1d4ed8"
+                  CornerRadius="6"
+                  Padding="12"
+                  PointerEntered="OnHoverEnter"
+                  PointerExited="OnHoverLeave">
+            <TextBlock Text="Наведи курсор сюда" HorizontalAlignment="Center" />
+          </Border>
+          <TextBlock AutomationProperties.AutomationId="HoverStatus"
+                     Text="{Binding HoverStatus}"
+                     FontSize="14"
+                     Foreground="#a78bfa" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="2" Grid.ColumnSpan="2" Background="#0b1220" CornerRadius="8" Padding="12">
+        <Grid ColumnDefinitions="*,2*" ColumnSpacing="12">
+          <StackPanel Spacing="8" Grid.Column="0">
+            <TextBlock Text="Список со скроллом" FontWeight="SemiBold" />
+            <ListBox AutomationProperties.AutomationId="ItemsList"
+                     Height="240"
+                     ItemsSource="{Binding Items}"
+                     SelectedItem="{Binding SelectedItem}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.VerticalScrollBarVisibility="Visible" />
+          </StackPanel>
+          <StackPanel Spacing="8" Grid.Column="1">
+            <TextBlock Text="Детали выбранного элемента" FontWeight="SemiBold" />
+            <TextBlock AutomationProperties.AutomationId="SelectedItemText"
+                       FontSize="14"
+                       Text="{Binding SelectedItem}" />
+            <TextBlock Text="Папка сохранения тестов:" />
+            <TextBlock AutomationProperties.AutomationId="RecorderOutputText"
+                       Text="{Binding RecorderOutput}"
+                       TextWrapping="Wrap"
+                       FontFamily="Consolas" />
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <Border Grid.Row="3" Grid.ColumnSpan="2" Margin="0,12,0,0" Padding="12" Background="#0f172a" CornerRadius="8">
+        <TextBlock Text="Нажми Ctrl+Shift+A чтобы добавить assert по контролу под курсором или фокусу."
+                   TextWrapping="Wrap" />
+      </Border>
+    </Grid>
+</Window>

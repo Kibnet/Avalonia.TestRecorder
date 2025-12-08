@@ -1,0 +1,153 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Avalonia.TestRecorder.UI.RecorderOverlay"
+             Height="30" BorderThickness="0"
+             Name="OverlayControl">
+    <UserControl.Styles>
+        <Style Selector="UserControl">
+            <Setter Property="Background" Value="{DynamicResource RecorderOverlayBackground}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource RecorderOverlayBorder}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="0,0,6,6"/>
+        </Style>
+        
+        <!-- Light Theme (Default) -->
+        <Style Selector="UserControl">
+            <Style.Resources>
+                <SolidColorBrush x:Key="RecorderOverlayBackground">#F0F0F0</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderOverlayBorder">#C0C0C0</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderSeparator">#C0C0C0</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderTextColor">#000000</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderBorderColor">#C0C0C0</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderClearIcon">#95A5A6</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderCloseIcon">#95A5A6</SolidColorBrush>
+            </Style.Resources>
+        </Style>
+        
+        <!-- Dark Theme -->
+        <Style Selector="UserControl.dark-theme">
+            <Style.Resources>
+                <SolidColorBrush x:Key="RecorderOverlayBackground">#2D2D30</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderOverlayBorder">#3F3F46</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderSeparator">#3F3F46</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderTextColor">#FFFFFF</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderBorderColor">#3F3F46</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderClearIcon">#B0B0B0</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderCloseIcon">#B0B0B0</SolidColorBrush>
+            </Style.Resources>
+        </Style>
+        
+        <!-- Minimized State -->
+        <Style Selector="UserControl:minimized">
+            <Setter Property="Height" Value="30"/>
+        </Style>
+    </UserControl.Styles>
+    <Border Padding="0" BorderThickness="0">
+        <!-- Add drop shadow effect for floating appearance -->
+        <Border.Effect>
+            <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="12" OffsetX="0" OffsetY="4"/>
+        </Border.Effect>
+        
+        <!-- Container for both panels -->
+        <Grid>
+            <!-- Expanded State (Normal) -->
+            <StackPanel Name="ExpandedPanel" Orientation="Horizontal" Spacing="0">
+                <!-- Minimize Button -->
+                <Button Name="MinimizeButton" 
+                        Width="30" Height="30" 
+                        Padding="4"
+                        ToolTip.Tip="Minimize overlay">
+                    <Viewbox Width="20" Height="20">
+                        <Canvas Width="24" Height="24">
+                            <!-- Minimize Icon -->
+                            <Path Fill="{DynamicResource RecorderCloseIcon}" Data="M19,13H5V11H19V13Z"/>
+                        </Canvas>
+                    </Viewbox>
+                </Button>
+
+                <!-- Record/Stop Button -->
+                <Button Name="RecordButton" 
+                        Width="30" Height="30" 
+                        Padding="4"
+                        ToolTip.Tip="Start/Stop Recording (Ctrl+Shift+R)">
+                    <Viewbox Width="20" Height="20">
+                        <Canvas Width="24" Height="24">
+                            <!-- Play Icon -->
+                            <Path Fill="#27AE60" Name="PlayIcon" Data="M8,5.14V19.14L19,12.14L8,5.14Z"/>
+                            <!-- Stop Icon -->
+                            <Rectangle Width="14" Height="14" Canvas.Left="5" Canvas.Top="5" Fill="#E74C3C" Name="StopIcon" IsVisible="False"/>
+                        </Canvas>
+                    </Viewbox>
+                </Button>
+
+                <!-- Pause/Resume Button -->
+                <Button Name="PauseButton" 
+                        Width="30" Height="30" 
+                        Padding="4"
+                        ToolTip.Tip="Pause/Resume (Ctrl+Shift+P)">
+                    <Viewbox Width="20" Height="20">
+                        <Canvas Width="24" Height="24">
+                            <!-- Pause Icon -->
+                            <Rectangle Width="4" Height="14" Canvas.Left="7" Canvas.Top="5" Fill="#F39C12" Name="PauseIcon"/>
+                            <Rectangle Width="4" Height="14" Canvas.Left="13" Canvas.Top="5" Fill="#F39C12"/>
+                        </Canvas>
+                    </Viewbox>
+                </Button>
+
+                <!-- Clear Button -->
+                <Button Name="ClearButton" 
+                        Width="30" Height="30" 
+                        Padding="4"
+                        ToolTip.Tip="Clear recorded steps">
+                    <Viewbox Width="20" Height="20">
+                        <Canvas Width="24" Height="24">
+                            <!-- Trash Icon -->
+                            <Path Fill="{DynamicResource RecorderClearIcon}" Data="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z"/>
+                        </Canvas>
+                    </Viewbox>
+                </Button>
+
+                <!-- Save Button -->
+                <Button Name="SaveButton" 
+                        Width="30" Height="30" 
+                        Padding="4"
+                        ToolTip.Tip="Save as... (Ctrl+Shift+S)">
+                    <Viewbox Width="20" Height="20">
+                        <Canvas Width="24" Height="24">
+                            <!-- Save Icon -->
+                            <Path Fill="#3498DB" Data="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z"/>
+                        </Canvas>
+                    </Viewbox>
+                </Button>
+                
+                <!-- Step Counter -->
+                <Border MinWidth="30" BorderThickness="1" BorderBrush="{DynamicResource RecorderBorderColor}">				
+                    <TextBlock Text="0" 
+                           Name="StepCounter"
+                           VerticalAlignment="Center" 
+                           TextAlignment="Center"
+                           Padding="2"
+                           FontSize="12"
+                           MinWidth="24"
+                           Foreground="{DynamicResource RecorderTextColor}"/>
+                </Border>
+            </StackPanel>
+            
+            <!-- Minimized State -->
+            <StackPanel Name="MinimizedPanel" Orientation="Horizontal" Spacing="0" IsVisible="False">
+                <!-- Restore Button -->
+                <Button Name="RestoreButton" 
+                        Width="30" Height="30" 
+                        Padding="4"
+                        ToolTip.Tip="Restore overlay">
+                    <Viewbox Width="18" Height="18">
+                        <Canvas Width="24" Height="24">
+                            <!-- Restore Icon -->
+                            <Path Fill="{DynamicResource RecorderCloseIcon}" Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
+                        </Canvas>
+                    </Viewbox>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
