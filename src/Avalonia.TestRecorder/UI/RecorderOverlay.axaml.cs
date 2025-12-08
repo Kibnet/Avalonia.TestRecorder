@@ -2,7 +2,9 @@ using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 
@@ -34,6 +36,7 @@ public partial class RecorderOverlay : UserControl
     {
         InitializeComponent();
         InitializeControls();
+        DetectAndApplyTheme();
     }
 
     private void InitializeComponent()
@@ -81,11 +84,65 @@ public partial class RecorderOverlay : UserControl
         _updateTimer.Start();
     }
 
+    private void DetectAndApplyTheme()
+    {
+        // Try to detect theme from application
+        if (Application.Current is IResourceHost host)
+        {
+            // Check for common theme resource keys
+            if (host.TryGetResource("ThemeVariant", null, out var themeVariant))
+            {
+                var themeName = themeVariant?.ToString();
+                if (themeName != null && themeName.Contains("Dark", StringComparison.OrdinalIgnoreCase))
+                {
+                    Classes.Add("dark-theme");
+                    _logger?.LogDebug("Applied dark theme to overlay");
+                    return;
+                }
+            }
+
+            // Check for dark background color as fallback
+            if (host.TryGetResource("SystemControlBackgroundAltHighBrush", null, out var bgBrush) ||
+                host.TryGetResource("Background", null, out bgBrush))
+            {
+                if (bgBrush is ISolidColorBrush solidBrush)
+                {
+                    var color = solidBrush.Color;
+                    // Consider it dark if luminance is low
+                    var luminance = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
+                    if (luminance < 0.5)
+                    {
+                        Classes.Add("dark-theme");
+                        _logger?.LogDebug("Applied dark theme to overlay (detected from background)");
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Default to light theme (no class needed)
+        _logger?.LogDebug("Applied light theme to overlay (default)");
+    }
+
     public void AttachSession(RecorderSession session, ILogger? logger = null)
     {
         _session = session;
         _logger = logger;
         UpdateUI();
+    }
+
+    /// <summary>
+    /// Manually sets the overlay theme.
+    /// </summary>
+    /// <param name="isDark">True for dark theme, false for light theme.</param>
+    public void SetTheme(bool isDark)
+    {
+        Classes.Remove("dark-theme");
+        if (isDark)
+        {
+            Classes.Add("dark-theme");
+        }
+        _logger?.LogDebug("Overlay theme manually set to: {Theme}", isDark ? "Dark" : "Light");
     }
 
     private void OnUpdateTimer(object? sender, EventArgs e)
@@ -110,7 +167,7 @@ public partial class RecorderOverlay : UserControl
         if (_stepCounter != null)
         {
             var count = _session.GetStepCount();
-            _stepCounter.Text = count == 1 ? "1 step" : $"{count} steps";
+            _stepCounter.Text = $"{count}";
         }
 
         // Update record button icon

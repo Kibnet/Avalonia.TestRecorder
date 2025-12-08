@@ -63,12 +63,67 @@ TestRecorder.Attach(mainWindow, new RecorderOptions
 });
 ```
 
+### Theme Support
+
+The overlay automatically detects the application theme (light or dark) and adapts its appearance:
+
+**Auto-detection** (default):
+The overlay checks the following in order:
+1. `ThemeVariant` resource (looks for "Dark" in the variant name)
+2. Background color brightness (calculates luminance)
+3. Falls back to light theme if unable to detect
+
+**Manual theme setting**:
+```csharp
+// Set at initialization
+TestRecorder.Attach(mainWindow, new RecorderOptions
+{
+    OverlayTheme = OverlayTheme.Dark  // or OverlayTheme.Light
+});
+
+// Change theme later
+var overlay = // ... get reference to overlay
+overlay.SetTheme(isDark: true);
+```
+
+**Theme Colors:**
+
+Light Theme:
+- Background: #F0F0F0 (Light gray)
+- Border: #C0C0C0 (Medium gray)
+- Text: #000000 (Black)
+- Icons: #95A5A6 (Gray)
+
+Dark Theme:
+- Background: #2D2D30 (Dark gray)
+- Border: #3F3F46 (Darker gray)
+- Text: #FFFFFF (White)
+- Icons: #B0B0B0 (Light gray)
+
 ### Overlay Placement
 
-The overlay is automatically positioned at the top of the window and spans the full width. It adjusts based on the window content:
+The overlay is displayed as a **separate modal window** to avoid disrupting the structure of the window being recorded:
 
-- If window content is a `Panel`, the overlay is inserted at the beginning
-- If window content is a single `Control`, it's wrapped in a `DockPanel` with the overlay docked to the top
+- **Position**: Centered at the top edge of the main window
+- **Window type**: Separate, frameless, topmost window
+- **Behavior**: Follows the main window when moved, hides when minimized
+- **Z-order**: Always on top (Topmost = true)
+- **Size**: Fixed dimensions (200x40px)
+- **Styling**: Rounded bottom corners (6px radius) with drop shadow for floating appearance
+- **Transparency**: Transparent background with non-transparent content panel
+
+**Visual characteristics:**
+- Drop shadow: 12px blur radius, 4px Y-offset, 30% opacity
+- Border: 1px all around (theme-dependent color)
+- Background: Semi-opaque panel (theme-dependent color)
+- Window decorations: None (SystemDecorations.None)
+- Not shown in taskbar
+
+**Window tracking:**
+- Automatically repositions when main window moves
+- Hides when main window is minimized
+- Closes when main window closes
+- Does not interfere with main window's visual tree or layout
 
 ## Visual Design
 
@@ -147,8 +202,9 @@ var file = await window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOp
 - Check logs for any initialization errors
 
 ### Overlay Blocks UI Elements
-- The overlay is only 40px tall and docked at the top
-- Click the ✕ button to hide it temporarily
+- The overlay is a separate window, so it won't block any UI elements in the main window
+- If the overlay obscures important content, you can move the main window
+- Click the ✕ button to hide the overlay temporarily
 - Consider setting `ShowOverlay = false` and using hotkeys only
 
 ### Save Button Does Nothing

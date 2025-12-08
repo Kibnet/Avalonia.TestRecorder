@@ -47,6 +47,12 @@ public sealed class RecorderOptions
     public bool ShowOverlay { get; init; } = true;
 
     /// <summary>
+    /// Gets or sets the overlay theme.
+    /// Null means auto-detect from application theme.
+    /// </summary>
+    public OverlayTheme? OverlayTheme { get; init; }
+
+    /// <summary>
     /// Gets or sets the logger for diagnostic output.
     /// </summary>
     public ILogger? Logger { get; init; }
@@ -138,4 +144,20 @@ public enum TestFramework
 {
     XUnit,
     NUnit
+}
+
+/// <summary>
+/// Overlay panel theme options.
+/// </summary>
+public enum OverlayTheme
+{
+    /// <summary>
+    /// Light theme with bright background.
+    /// </summary>
+    Light,
+    
+    /// <summary>
+    /// Dark theme with dark background.
+    /// </summary>
+    Dark
 }

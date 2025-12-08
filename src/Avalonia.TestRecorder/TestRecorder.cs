@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.TestRecorder.UI;
 using Avalonia.Layout;
+using Avalonia.Media;
+using Microsoft.Extensions.Logging;
 
 namespace Avalonia.TestRecorder;
 
@@ -10,6 +12,7 @@ namespace Avalonia.TestRecorder;
 public static class TestRecorder
 {
     private static readonly Dictionary<Window, IRecorderSession> _sessions = new();
+    private static readonly Dictionary<Window, Window> _overlayWindows = new();
 
     /// <summary>
     /// Attaches a test recorder to the specified window.
@@ -45,6 +48,13 @@ public static class TestRecorder
             {
                 session.Dispose();
             }
+            
+            // Close overlay window if exists
+            if (_overlayWindows.TryGetValue(window, out var overlayWindow))
+            {
+                _overlayWindows.Remove(window);
+                overlayWindow.Close();
+            }
         };
 
         return session;
@@ -56,25 +66,62 @@ public static class TestRecorder
         var overlay = new RecorderOverlay();
         overlay.AttachSession(session, options.Logger);
 
-        // Insert overlay at top of window content
-        if (window.Content is Panel panel)
+        // Apply theme if specified
+        if (options.OverlayTheme.HasValue)
         {
-            // If content is already a panel, add overlay to it
-            var dockPanel = new DockPanel();
-            DockPanel.SetDock(overlay, Dock.Top);
-            
-            panel.Children.Insert(0, dockPanel);
-            dockPanel.Children.Add(overlay);
+            overlay.SetTheme(options.OverlayTheme.Value == Avalonia.TestRecorder.OverlayTheme.Dark);
         }
-        else if (window.Content is Control content)
+
+        // Create separate window for overlay
+        var overlayWindow = new Window
         {
-            // Wrap existing content in DockPanel
-            var dockPanel = new DockPanel();
-            DockPanel.SetDock(overlay, Dock.Top);
-            
-            window.Content = dockPanel;
-            dockPanel.Children.Add(overlay);
-            dockPanel.Children.Add(content);
+            Width = 200,
+            Height = 40,
+            CanResize = false,
+            ShowInTaskbar = false,
+            SystemDecorations = SystemDecorations.None,
+            TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent },
+            Background = Brushes.Transparent,
+            Content = overlay,
+            Topmost = true,
+            Title = "Test Recorder"
+        };
+
+        // Position overlay at center-top of main window
+        void PositionOverlay()
+        {
+            if (window.WindowState != WindowState.Minimized)
+            {
+                var mainWindowBounds = new PixelRect(
+                    window.Position,
+                    PixelSize.FromSize(new Size(window.Width, window.Height), 1.0));
+
+                var x = mainWindowBounds.X + (mainWindowBounds.Width - (int)overlayWindow.Width) / 2;
+                var y = mainWindowBounds.Y;
+
+                overlayWindow.Position = new PixelPoint(x, y);
+            }
         }
+
+        // Track main window position and state changes
+        window.PositionChanged += (s, e) => PositionOverlay();
+        window.PropertyChanged += (s, e) =>
+        {
+            if (e.Property.Name == nameof(Window.WindowState))
+            {
+                overlayWindow.IsVisible = window.WindowState != WindowState.Minimized;
+                if (window.WindowState != WindowState.Minimized)
+                {
+                    PositionOverlay();
+                }
+            }
+        };
+
+        overlayWindow.Show();
+        PositionOverlay();
+
+        _overlayWindows[window] = overlayWindow;
+        
+        options.Logger?.LogDebug("Overlay attached as separate window");
     }
 }
