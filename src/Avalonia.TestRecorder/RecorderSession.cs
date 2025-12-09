@@ -167,7 +167,8 @@ public sealed class RecorderSession : IRecorderSession
         _window.AddHandler(InputElement.PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel);
         _window.AddHandler(InputElement.PointerMovedEvent, OnPointerMoved, RoutingStrategies.Tunnel);
         _window.AddHandler(InputElement.TextInputEvent, OnTextInput, RoutingStrategies.Tunnel);
-        _window.AddHandler(InputElement.KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+        // Use Bubble strategy to ensure keyboard shortcuts work even when controls like TextBox have focus
+        _window.AddHandler(InputElement.KeyDownEvent, OnKeyDown, RoutingStrategies.Bubble);
     }
 
     private void DetachEventHandlers()
@@ -263,25 +264,6 @@ public sealed class RecorderSession : IRecorderSession
                         Stop();
                     e.Handled = true;
                     return;
-            }
-        }
-
-        // Only handle other keys when recording
-        if (_state != RecorderState.Recording)
-            return;
-
-        // Handle hotkeys
-        if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
-            switch (e.Key)
-            {
-                case Key.R: // Start/Stop
-                    if (_state == RecorderState.Off)
-                        Start();
-                    else if (_state == RecorderState.Recording)
-                        Stop();
-                    e.Handled = true;
-                    return;
 
                 case Key.S: // Save
                     // Instead of directly saving, show the save dialog
@@ -333,6 +315,10 @@ public sealed class RecorderSession : IRecorderSession
                     return;
             }
         }
+
+        // Only handle other keys when recording
+        if (_state != RecorderState.Recording)
+            return;
 
         // Record special keys (Enter, Tab, etc.)
         if (e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.Escape)
@@ -386,11 +372,13 @@ public sealed class RecorderSession : IRecorderSession
         }
 
         var (selector, quality, warning) = _selectorResolver.Resolve(control);
+        var uiValidator = new ValidationUi(_window);
+        var foundControl = uiValidator.FindControlPublic(selector);
 
         // Try extractors
         foreach (var extractor in _extractors)
         {
-            if (extractor.TryExtract(control, out var step) && step != null)
+            if (extractor.TryExtract(foundControl, out var step) && step != null)
             {
                 // Create new step with updated selector info
                 var updatedStep = new RecordedStep

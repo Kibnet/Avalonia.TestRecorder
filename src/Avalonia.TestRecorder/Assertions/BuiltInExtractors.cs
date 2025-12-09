@@ -23,7 +23,7 @@ internal static class BuiltInExtractors
     {
         public bool TryExtract(Control control, out RecordedStep? step)
         {
-            if (control is TextBox textBox && !string.IsNullOrEmpty(textBox.Text))
+            if (control is TextBox textBox)
             {
                 step = new RecordedStep
                 {
@@ -41,7 +41,7 @@ internal static class BuiltInExtractors
     {
         public bool TryExtract(Control control, out RecordedStep? step)
         {
-            if (control is TextBlock textBlock && !string.IsNullOrEmpty(textBlock.Text))
+            if (control is TextBlock textBlock)
             {
                 step = new RecordedStep
                 {
@@ -59,9 +59,9 @@ internal static class BuiltInExtractors
     {
         public bool TryExtract(Control control, out RecordedStep? step)
         {
-            if (control is ContentControl content && content.Content != null)
+            if (control is ContentControl content)
             {
-                var text = content.Content.ToString();
+                var text = content.Content?.ToString();
                 if (!string.IsNullOrEmpty(text))
                 {
                     step = new RecordedStep
