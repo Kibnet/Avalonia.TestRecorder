@@ -45,7 +45,7 @@
                    Margin="0,20,0,0"
                    FontWeight="Bold" />
         
-        <TextBlock Text="Recording Status:" Margin="0,30,0,0" FontSize="12" Foreground="Gray" HorizontalAlignment="Center"/>
+        <TextBlock AutomationProperties.AutomationId="statusLabel" Text="Recording Status:" Margin="0,30,0,0" FontSize="12" Foreground="Gray" HorizontalAlignment="Center"/>
         <TextBlock Text="Press Ctrl+Shift+R to start/stop recording" FontSize="10" Foreground="Gray" HorizontalAlignment="Center"/>
         <TextBlock Text="Press Ctrl+Shift+S to save test" FontSize="10" Foreground="Gray" HorizontalAlignment="Center"/>
     </StackPanel>

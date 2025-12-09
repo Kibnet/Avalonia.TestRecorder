@@ -13,6 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Avalonia.HeadlessTestKit\Avalonia.HeadlessTestKit.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="CodeGen\Templates\*.template" />
   </ItemGroup>
 

@@ -261,7 +261,20 @@ public partial class RecorderOverlay : UserControl
         {
             var lastStep = steps[steps.Count - 1];
             var code = GenerateStepCode(lastStep);
-            SetStatusBarText(code);
+            
+            // Check if the step has validation errors
+            if (lastStep.Warning != null && lastStep.Warning.Contains("VALIDATION FAILED"))
+            {
+                SetStatusBarText($"ERROR: {lastStep.Warning}");
+            }
+            else if (lastStep.Warning != null && lastStep.Warning.Contains("FALLBACK"))
+            {
+                SetStatusBarText($"WARNING: {lastStep.Warning} - {code}");
+            }
+            else
+            {
+                SetStatusBarText(code);
+            }
         }
     }
 

@@ -23,6 +23,7 @@ public sealed class RecorderSession : IRecorderSession
     private readonly List<RecordedStep> _steps = new();
     private readonly List<IAssertValueExtractor> _extractors;
     private readonly ILogger? _logger;
+    private readonly StepValidator _stepValidator; // Added validator
     private RecorderState _state = RecorderState.Off;
     private readonly System.Timers.Timer? _textInputTimer;
     private Control? _lastTextControl;
@@ -45,7 +46,8 @@ public sealed class RecorderSession : IRecorderSession
         _window = window;
         _options = options;
         _logger = options.Logger;
-        _selectorResolver = new SelectorResolver(options.Selector, _logger);
+        _selectorResolver = new SelectorResolver(options.Selector, _logger, window); // Pass window for validation
+        _stepValidator = new StepValidator(window, _logger); // Initialize validator
         
         var appName = Assembly.GetEntryAssembly()?.GetName().Name ?? "App";
         _codeGenerator = new TestCodeGenerator(options.Codegen, appName);
@@ -219,7 +221,9 @@ public sealed class RecorderSession : IRecorderSession
             Warning = warning
         };
 
-        _steps.Add(step);
+        // Validate the step and try fallbacks if needed
+        ValidateAndAddStep(step, control);
+        
         _logger?.LogDebug("Recorded {StepType}: {Selector}", stepType, selector);
     }
 
@@ -336,7 +340,9 @@ public sealed class RecorderSession : IRecorderSession
                 Warning = warning
             };
 
-            _steps.Add(step);
+            // Validate the step and try fallbacks if needed
+            ValidateAndAddStep(step, _lastTextControl);
+            
             _logger?.LogDebug("Recorded TypeText: {Selector} = {Text}", selector, _accumulatedText);
 
             _accumulatedText = string.Empty;
@@ -370,7 +376,10 @@ public sealed class RecorderSession : IRecorderSession
                     Quality = quality,
                     Warning = warning
                 };
-                _steps.Add(updatedStep);
+                
+                // Validate the step and try fallbacks if needed
+                ValidateAndAddStep(updatedStep, control);
+                
                 _logger?.LogInformation("Captured assertion: {Type} on {Selector}", updatedStep.Type, selector);
                 return;
             }
@@ -471,5 +480,47 @@ public sealed class RecorderSession : IRecorderSession
         }
         
         return null;
+    }
+    
+    /// <summary>
+    /// Validates a step and adds it to the recorded steps.
+    /// If validation fails, attempts fallback strategies.
+    /// </summary>
+    /// <param name="step">The step to validate and add.</param>
+    /// <param name="control">The control associated with the step.</param>
+    private void ValidateAndAddStep(RecordedStep step, Control? control)
+    {
+        if (control == null)
+        {
+            // If we don't have a control reference, just add the step
+            _steps.Add(step);
+            return;
+        }
+        
+        // Validate the step with control matching
+        var validationResult = _stepValidator.ValidateStep(step, control);
+        
+        if (validationResult.IsSuccess)
+        {
+            // Step is valid, add it directly
+            _steps.Add(step);
+        }
+        else
+        {
+            // All validation attempts failed, add the step but mark it as problematic
+            step = new RecordedStep
+            {
+                Type = step.Type,
+                Selector = step.Selector,
+                Parameter = step.Parameter,
+                Quality = step.Quality,
+                Warning = step.Warning == null 
+                    ? $"VALIDATION FAILED: {validationResult.ErrorMessage}" 
+                    : $"{step.Warning}; VALIDATION FAILED: {validationResult.ErrorMessage}"
+            };
+            _steps.Add(step);
+                
+            _logger?.LogWarning("Step validation failed completely: {Message}", validationResult.ErrorMessage);
+        }
     }
 }
