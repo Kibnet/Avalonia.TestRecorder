@@ -141,7 +141,34 @@ public partial class RecorderOverlay : UserControl
         // Set the callback for showing the save dialog
         _session.SetSaveDialogCallback(ShowSaveFileDialog);
         
+        // Set the callback for Clear action via keyboard shortcut
+        _session.SetClearCallback(OnClearShortcut);
+        
+        // Set the callback for Minimize/Restore action via keyboard shortcut
+        _session.SetMinimizeRestoreCallback(OnMinimizeRestoreShortcut);
+        
         UpdateUI();
+    }
+
+    private void OnClearShortcut()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            SetStatusBarText(""); // Clear status bar
+            _logger?.LogInformation("Steps cleared via keyboard shortcut");
+            UpdateUI();
+        });
+    }
+
+    private void OnMinimizeRestoreShortcut()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (_isMinimized)
+                Restore();
+            else
+                Minimize();
+        });
     }
 
     public void SetTheme(bool isDark)
@@ -205,15 +232,7 @@ public partial class RecorderOverlay : UserControl
     {
         if (_session == null)
             return;
-
-        // Update status icons
-        if (_iconOff != null && _iconRecording != null && _iconPaused != null)
-        {
-            _iconOff.IsVisible = _session.State == RecorderState.Off;
-            _iconRecording.IsVisible = _session.State == RecorderState.Recording;
-            _iconPaused.IsVisible = _session.State == RecorderState.Paused;
-        }
-
+        
         // Update step counter
         if (_stepCounter != null)
         {
@@ -328,13 +347,13 @@ public partial class RecorderOverlay : UserControl
                 
             case RecorderState.Recording:
                 _session.Stop();
-                _logger?.LogInformation("Recording paused via overlay");
+                _logger?.LogInformation("Recording stopped via overlay");
                 break;
         }
 
         UpdateUI();
     }
-
+    
     private void OnClearButtonClick(object? sender, RoutedEventArgs e)
     {
         if (_session == null)

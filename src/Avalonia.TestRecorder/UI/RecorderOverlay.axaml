@@ -22,6 +22,10 @@
                 <SolidColorBrush x:Key="RecorderClearIcon">#95A5A6</SolidColorBrush>
                 <SolidColorBrush x:Key="RecorderCloseIcon">#95A5A6</SolidColorBrush>
                 <SolidColorBrush x:Key="RecorderStatusText">#27AE60</SolidColorBrush> <!-- Green for success -->
+                <SolidColorBrush x:Key="RecorderHelpIcon">#5DADE2</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderHelpPopupBackground">#FFFFFF</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderHelpPopupBorder">#C0C0C0</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderHelpShortcutText">#3498DB</SolidColorBrush>
             </Style.Resources>
         </Style>
         
@@ -36,6 +40,10 @@
                 <SolidColorBrush x:Key="RecorderClearIcon">#B0B0B0</SolidColorBrush>
                 <SolidColorBrush x:Key="RecorderCloseIcon">#B0B0B0</SolidColorBrush>
                 <SolidColorBrush x:Key="RecorderStatusText">#2ECC71</SolidColorBrush> <!-- Light green for dark theme -->
+                <SolidColorBrush x:Key="RecorderHelpIcon">#5DADE2</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderHelpPopupBackground">#3C3C3C</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderHelpPopupBorder">#5F5F5F</SolidColorBrush>
+                <SolidColorBrush x:Key="RecorderHelpShortcutText">#5DADE2</SolidColorBrush>
             </Style.Resources>
         </Style>
         
@@ -61,15 +69,104 @@
         <Grid>
             <!-- Expanded State (Normal) -->
             <StackPanel Name="ExpandedPanel" Orientation="Horizontal" Spacing="0">
+                
                 <!-- Minimize Button -->
                 <Button Name="MinimizeButton" 
                         Width="30" Height="30" 
                         Padding="4"
-                        ToolTip.Tip="Minimize overlay">
+                        ToolTip.Tip="Minimize overlay (Ctrl+Shift+M)">
                     <Viewbox Width="20" Height="20">
                         <Canvas Width="24" Height="24">
                             <!-- Minimize Icon -->
                             <Path Fill="{DynamicResource RecorderCloseIcon}" Data="M19,13H5V11H19V13Z"/>
+                        </Canvas>
+                    </Viewbox>
+                </Button>
+
+                <!-- Help Button -->
+                <Button Name="HelpButton" 
+                        Width="30" Height="30" 
+                        Padding="4">
+                    <Button.Flyout>
+                        <Flyout Placement="Bottom" ShowMode="TransientWithDismissOnPointerMoveAway">
+                            <Border Background="{DynamicResource RecorderHelpPopupBackground}" 
+                                    BorderBrush="{DynamicResource RecorderHelpPopupBorder}" 
+                                    BorderThickness="1" 
+                                    CornerRadius="6" 
+                                    Padding="12">
+                                <StackPanel Spacing="8" MinWidth="280">
+                                    <TextBlock Text="Keyboard Shortcuts" 
+                                               FontWeight="Bold" 
+                                               FontSize="14" 
+                                               Foreground="{DynamicResource RecorderTextColor}"/>
+                                    
+                                    <Border Height="1" Background="{DynamicResource RecorderSeparator}" Margin="0,4"/>
+                                    
+                                    <!-- Recording Controls -->
+                                    <TextBlock Text="Recording Controls" 
+                                               FontWeight="SemiBold" 
+                                               FontSize="11" 
+                                               Foreground="{DynamicResource RecorderTextColor}" 
+                                               Margin="0,4,0,2"/>
+                                    
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Ctrl+Shift+R" Foreground="{DynamicResource RecorderHelpShortcutText}" FontFamily="Consolas" FontSize="11"/>
+                                            <TextBlock Text="Ctrl+Shift+S" Foreground="{DynamicResource RecorderHelpShortcutText}" FontFamily="Consolas" FontSize="11"/>
+                                            <TextBlock Text="Ctrl+Shift+C" Foreground="{DynamicResource RecorderHelpShortcutText}" FontFamily="Consolas" FontSize="11"/>
+                                            <TextBlock Text="Ctrl+Shift+M" Foreground="{DynamicResource RecorderHelpShortcutText}" FontFamily="Consolas" FontSize="11"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="4" Margin="16,0,0,0">
+                                            <TextBlock Text="Start/Stop Recording" Foreground="{DynamicResource RecorderTextColor}" FontSize="11"/>
+                                            <TextBlock Text="Save Test" Foreground="{DynamicResource RecorderTextColor}" FontSize="11"/>
+                                            <TextBlock Text="Clear Steps" Foreground="{DynamicResource RecorderTextColor}" FontSize="11"/>
+                                            <TextBlock Text="Minimize/Restore Overlay" Foreground="{DynamicResource RecorderTextColor}" FontSize="11"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    
+                                    <Border Height="1" Background="{DynamicResource RecorderSeparator}" Margin="0,4"/>
+                                    
+                                    <!-- Assertions -->
+                                    <TextBlock Text="Assertions (hover over element first)" 
+                                               FontWeight="SemiBold" 
+                                               FontSize="11" 
+                                               Foreground="{DynamicResource RecorderTextColor}" 
+                                               Margin="0,4,0,2"/>
+                                    
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Ctrl+Shift+A" Foreground="{DynamicResource RecorderHelpShortcutText}" FontFamily="Consolas" FontSize="11"/>
+                                            <TextBlock Text="Ctrl+Shift+T" Foreground="{DynamicResource RecorderHelpShortcutText}" FontFamily="Consolas" FontSize="11"/>
+                                            <TextBlock Text="Ctrl+Shift+V" Foreground="{DynamicResource RecorderHelpShortcutText}" FontFamily="Consolas" FontSize="11"/>
+                                            <TextBlock Text="Ctrl+Shift+E" Foreground="{DynamicResource RecorderHelpShortcutText}" FontFamily="Consolas" FontSize="11"/>
+                                            <TextBlock Text="Ctrl+Shift+K" Foreground="{DynamicResource RecorderHelpShortcutText}" FontFamily="Consolas" FontSize="11"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="4" Margin="16,0,0,0">
+                                            <TextBlock Text="Auto-detect Assertion" Foreground="{DynamicResource RecorderTextColor}" FontSize="11"/>
+                                            <TextBlock Text="Assert Text Content" Foreground="{DynamicResource RecorderTextColor}" FontSize="11"/>
+                                            <TextBlock Text="Assert Visible" Foreground="{DynamicResource RecorderTextColor}" FontSize="11"/>
+                                            <TextBlock Text="Assert Enabled" Foreground="{DynamicResource RecorderTextColor}" FontSize="11"/>
+                                            <TextBlock Text="Assert Checked" Foreground="{DynamicResource RecorderTextColor}" FontSize="11"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    
+                                    <Border Height="1" Background="{DynamicResource RecorderSeparator}" Margin="0,4"/>
+                                    
+                                    <!-- Tip -->
+                                    <TextBlock Text="Tip: Hover over a control, then press the shortcut to capture an assertion." 
+                                               FontStyle="Italic" 
+                                               FontSize="10" 
+                                               Foreground="{DynamicResource RecorderTextColor}" 
+                                               TextWrapping="Wrap"
+                                               Opacity="0.7"/>
+                                </StackPanel>
+                            </Border>
+                        </Flyout>
+                    </Button.Flyout>
+                    <Viewbox Width="20" Height="20">
+                        <Canvas Width="24" Height="24">
+                            <!-- Question Mark Icon -->
+                            <Path Fill="{DynamicResource RecorderHelpIcon}" Data="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z"/>
                         </Canvas>
                     </Viewbox>
                 </Button>
@@ -93,7 +190,7 @@
                 <Button Name="ClearButton" 
                         Width="30" Height="30" 
                         Padding="4"
-                        ToolTip.Tip="Clear recorded steps">
+                        ToolTip.Tip="Clear recorded steps (Ctrl+Shift+C)">
                     <Viewbox Width="20" Height="20">
                         <Canvas Width="24" Height="24">
                             <!-- Trash Icon -->
@@ -143,7 +240,7 @@
                 <Button Name="RestoreButton" 
                         Width="30" Height="30" 
                         Padding="4"
-                        ToolTip.Tip="Restore overlay">
+                        ToolTip.Tip="Restore overlay (Ctrl+Shift+M)">
                     <Viewbox Width="18" Height="18">
                         <Canvas Width="24" Height="24">
                             <!-- Restore Icon -->

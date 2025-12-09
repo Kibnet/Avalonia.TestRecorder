@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.TestRecorder.Assertions;
@@ -33,6 +34,10 @@ public sealed class RecorderSession : IRecorderSession
     
     // Callback for showing save dialog
     private Func<Task<string?>>? _showSaveDialogCallback;
+    
+    // Callbacks for overlay interaction
+    private Action? _onClearCallback;
+    private Action? _onMinimizeRestoreCallback;
 
     public RecorderState State => _state;
 
@@ -246,6 +251,22 @@ public sealed class RecorderSession : IRecorderSession
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
+        // Handle global hotkeys regardless of recording state
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            switch (e.Key)
+            {
+                case Key.R: // Start/Stop
+                    if (_state == RecorderState.Off)
+                        Start();
+                    else if (_state == RecorderState.Recording)
+                        Stop();
+                    e.Handled = true;
+                    return;
+            }
+        }
+
+        // Only handle other keys when recording
         if (_state != RecorderState.Recording)
             return;
 
@@ -255,10 +276,10 @@ public sealed class RecorderSession : IRecorderSession
             switch (e.Key)
             {
                 case Key.R: // Start/Stop
-                    if (_state == RecorderState.Recording)
-                        Stop();
-                    else
+                    if (_state == RecorderState.Off)
                         Start();
+                    else if (_state == RecorderState.Recording)
+                        Stop();
                     e.Handled = true;
                     return;
 
@@ -275,8 +296,39 @@ public sealed class RecorderSession : IRecorderSession
                     e.Handled = true;
                     return;
 
-                case Key.A: // Capture Assert
+                case Key.A: // Capture Assert (auto-detect)
                     CaptureAssert();
+                    e.Handled = true;
+                    return;
+
+                case Key.T: // Assert Text
+                    CaptureSpecificAssertion(StepType.AssertText);
+                    e.Handled = true;
+                    return;
+
+                case Key.V: // Assert Visible
+                    CaptureSpecificAssertion(StepType.AssertVisible);
+                    e.Handled = true;
+                    return;
+
+                case Key.E: // Assert Enabled
+                    CaptureSpecificAssertion(StepType.AssertEnabled);
+                    e.Handled = true;
+                    return;
+
+                case Key.K: // Assert Checked
+                    CaptureSpecificAssertion(StepType.AssertChecked);
+                    e.Handled = true;
+                    return;
+
+                case Key.C: // Clear Steps
+                    ClearSteps();
+                    _onClearCallback?.Invoke();
+                    e.Handled = true;
+                    return;
+
+                case Key.M: // Minimize/Restore Overlay
+                    _onMinimizeRestoreCallback?.Invoke();
                     e.Handled = true;
                     return;
             }
@@ -361,6 +413,85 @@ public sealed class RecorderSession : IRecorderSession
         _logger?.LogWarning("No assertion extractor matched control type: {Type}", control.GetType().Name);
     }
 
+    /// <summary>
+    /// Captures a specific type of assertion on the hovered control.
+    /// </summary>
+    /// <param name="assertionType">The type of assertion to capture.</param>
+    private void CaptureSpecificAssertion(StepType assertionType)
+    {
+        // Try to get control under mouse or focused control
+        var control = GetTargetControl();
+        if (control == null)
+        {
+            _logger?.LogWarning("No control found for specific assertion capture");
+            return;
+        }
+
+        var (selector, quality, warning) = _selectorResolver.Resolve(control);
+        
+        string? parameter = null;
+        
+        switch (assertionType)
+        {
+            case StepType.AssertText:
+                // Extract text from the control
+                parameter = ExtractTextFromControl(control);
+                break;
+            case StepType.AssertChecked:
+                // Extract checked state
+                parameter = ExtractCheckedState(control)?.ToString().ToLowerInvariant() ?? "false";
+                break;
+            case StepType.AssertVisible:
+            case StepType.AssertEnabled:
+                // No parameter needed
+                break;
+            default:
+                _logger?.LogWarning("Unsupported assertion type: {Type}", assertionType);
+                return;
+        }
+
+        var step = new RecordedStep
+        {
+            Type = assertionType,
+            Selector = selector,
+            Parameter = parameter,
+            Quality = quality,
+            Warning = warning
+        };
+
+        ValidateAndAddStep(step, control);
+        _logger?.LogInformation("Captured specific assertion: {Type} on {Selector}", assertionType, selector);
+    }
+
+    /// <summary>
+    /// Extracts text from a control.
+    /// </summary>
+    private string? ExtractTextFromControl(Control control)
+    {
+        return control switch
+        {
+            TextBlock tb => tb.Text,
+            TextBox tx => tx.Text,
+            Button btn => btn.Content?.ToString(),
+            ContentControl cc => cc.Content?.ToString(),
+            _ => null
+        };
+    }
+
+    /// <summary>
+    /// Extracts the checked state from a control.
+    /// </summary>
+    private bool? ExtractCheckedState(Control control)
+    {
+        return control switch
+        {
+            CheckBox cb => cb.IsChecked,
+            RadioButton rb => rb.IsChecked,
+            ToggleButton tb => tb.IsChecked,
+            _ => null
+        };
+    }
+
     private Control? GetTargetControl()
     {
         // Priority 1: Control under mouse pointer (most recent hover)
@@ -430,6 +561,22 @@ public sealed class RecorderSession : IRecorderSession
     public void SetSaveDialogCallback(Func<Task<string?>> callback)
     {
         _showSaveDialogCallback = callback;
+    }
+
+    /// <summary>
+    /// Sets a callback for when Clear is triggered via keyboard shortcut.
+    /// </summary>
+    public void SetClearCallback(Action callback)
+    {
+        _onClearCallback = callback;
+    }
+
+    /// <summary>
+    /// Sets a callback for when Minimize/Restore is triggered via keyboard shortcut.
+    /// </summary>
+    public void SetMinimizeRestoreCallback(Action callback)
+    {
+        _onMinimizeRestoreCallback = callback;
     }
 
     /// <summary>
