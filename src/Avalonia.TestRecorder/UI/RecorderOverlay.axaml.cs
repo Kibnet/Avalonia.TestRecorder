@@ -7,6 +7,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
+using System.Text;
 
 namespace Avalonia.TestRecorder.UI;
 
@@ -35,6 +36,9 @@ public partial class RecorderOverlay : UserControl
     private Shape? _stopIcon;
     private StackPanel? _expandedPanel;
     private StackPanel? _minimizedPanel;
+    private TextBlock? _statusBarText;
+    private TextBlock? _minimizedStatusBarText;
+    private int _previousStepCount = 0;
 
     public RecorderOverlay()
     {
@@ -65,6 +69,8 @@ public partial class RecorderOverlay : UserControl
         _stopIcon = this.FindControl<Shape>("StopIcon");
         _expandedPanel = this.FindControl<StackPanel>("ExpandedPanel");
         _minimizedPanel = this.FindControl<StackPanel>("MinimizedPanel");
+        _statusBarText = this.FindControl<TextBlock>("StatusBarText");
+        _minimizedStatusBarText = this.FindControl<TextBlock>("MinimizedStatusBarText");
 
         // Attach event handlers
         if (_recordButton != null)
@@ -144,20 +150,18 @@ public partial class RecorderOverlay : UserControl
         UpdateUI();
     }
 
-    /// <summary>
-    /// Manually sets the overlay theme.
-    /// </summary>
-    /// <param name="isDark">True for dark theme, false for light theme.</param>
     public void SetTheme(bool isDark)
     {
-        Classes.Remove("dark-theme");
         if (isDark)
         {
             Classes.Add("dark-theme");
         }
-        _logger?.LogDebug("Overlay theme manually set to: {Theme}", isDark ? "Dark" : "Light");
+        else
+        {
+            Classes.Remove("dark-theme");
+        }
     }
-    
+
     /// <summary>
     /// Minimizes the overlay to a small button.
     /// </summary>
@@ -175,12 +179,6 @@ public partial class RecorderOverlay : UserControl
         if (_minimizedPanel != null)
             _minimizedPanel.IsVisible = true;
             
-        // Update parent window size
-        if (this.Parent is Window window)
-        {
-            window.Height = 30;
-        }
-        
         _logger?.LogInformation("Overlay minimized");
     }
     
@@ -200,12 +198,6 @@ public partial class RecorderOverlay : UserControl
             
         if (_minimizedPanel != null)
             _minimizedPanel.IsVisible = false;
-            
-        // Update parent window size
-        if (this.Parent is Window window)
-        {
-            window.Height = 40;
-        }
         
         _logger?.LogInformation("Overlay restored");
     }
@@ -233,6 +225,13 @@ public partial class RecorderOverlay : UserControl
         {
             var count = _session.GetStepCount();
             _stepCounter.Text = $"{count}";
+            
+            // Check if a new step was added (works in both Recording and Paused states)
+            if (count > _previousStepCount && (_session.State == RecorderState.Recording || _session.State == RecorderState.Paused))
+            {
+                ShowLastStepCode();
+            }
+            _previousStepCount = count;
         }
 
         // Update record button icon based on state
@@ -247,6 +246,65 @@ public partial class RecorderOverlay : UserControl
 
         // Update button enabled states
         // The record button is always enabled now since it handles all states
+    }
+
+    /// <summary>
+    /// Shows the code for the last recorded step in the status bar.
+    /// </summary>
+    private void ShowLastStepCode()
+    {
+        if (_session == null)
+            return;
+
+        var steps = GetSessionSteps(_session);
+        if (steps.Count > 0)
+        {
+            var lastStep = steps[steps.Count - 1];
+            var code = GenerateStepCode(lastStep);
+            SetStatusBarText(code);
+        }
+    }
+
+    /// <summary>
+    /// Gets the list of recorded steps from the session.
+    /// </summary>
+    private List<RecordedStep> GetSessionSteps(RecorderSession session)
+    {
+        // Since _steps is private in RecorderSession, we'll use reflection to access it
+        var stepsField = typeof(RecorderSession).GetField("_steps", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (stepsField != null)
+        {
+            return (List<RecordedStep>)stepsField.GetValue(session)!;
+        }
+        return new List<RecordedStep>();
+    }
+
+    /// <summary>
+    /// Generates the code representation for a recorded step.
+    /// </summary>
+    private string GenerateStepCode(RecordedStep step)
+    {
+        var warning = step.Warning != null ? $" // {step.Warning}" : "";
+        return step.Type switch
+        {
+            StepType.Click => $"ui.Click(\"{step.Selector}\");{warning}",
+            StepType.RightClick => $"ui.RightClick(\"{step.Selector}\");{warning}",
+            StepType.DoubleClick => $"ui.DoubleClick(\"{step.Selector}\");{warning}",
+            StepType.TypeText => $"ui.TypeText(\"{step.Selector}\", \"{EscapeString(step.Parameter ?? "")}\");{warning}",
+            StepType.KeyPress => $"ui.KeyPress(\"{step.Parameter}\");{warning}",
+            StepType.Scroll => $"ui.Scroll(\"{step.Selector}\", {step.Parameter});{warning}",
+            StepType.Hover => $"ui.Hover(\"{step.Selector}\");{warning}",
+            StepType.AssertText => $"ui.AssertText(\"{step.Selector}\", \"{EscapeString(step.Parameter ?? "")}\");{warning}",
+            StepType.AssertChecked => $"ui.AssertChecked(\"{step.Selector}\", {step.Parameter});{warning}",
+            StepType.AssertVisible => $"ui.AssertVisible(\"{step.Selector}\");{warning}",
+            StepType.AssertEnabled => $"ui.AssertEnabled(\"{step.Selector}\");{warning}",
+            _ => $"// Unknown step type: {step.Type}"
+        };
+    }
+
+    private string EscapeString(string str)
+    {
+        return str.Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r");
     }
 
     private void OnRecordButtonClick(object? sender, RoutedEventArgs e)
@@ -300,6 +358,7 @@ public partial class RecorderOverlay : UserControl
             return;
 
         _session.ClearSteps();
+        SetStatusBarText(""); // Clear status bar
         _logger?.LogInformation("Steps cleared via overlay");
         UpdateUI();
     }
@@ -309,40 +368,44 @@ public partial class RecorderOverlay : UserControl
         if (_session == null)
             return;
 
-        var window = TopLevel.GetTopLevel(this) as Window;
-        if (window == null)
-            return;
-
         try
         {
-            // Show save file dialog
-            var file = await window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            var filePath = await _session.SaveTestToFileWithDialog();
+            if (filePath != null)
             {
-                Title = "Save Test Code",
-                SuggestedFileName = _session.GetSuggestedFileName(),
-                FileTypeChoices = new[]
-                {
-                    new FilePickerFileType("C# Source File")
-                    {
-                        Patterns = new[] { "*.cs" }
-                    }
-                },
-                DefaultExtension = "cs"
-            });
-
-            if (file != null)
-            {
-                var filePath = file.Path.LocalPath;
-                _session.SaveTestToFile(filePath);
-                _logger?.LogInformation("Test saved to: {FilePath}", filePath);
+                SetStatusBarText($"Saved: {System.IO.Path.GetFileName(filePath)}");
+                _logger?.LogInformation("Test saved via overlay: {FilePath}", filePath);
             }
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Error saving test file");
+            SetStatusBarText($"Save failed: {ex.Message}");
+            _logger?.LogError(ex, "Error saving test via overlay");
         }
     }
-    
+
+    private void OnMinimizeButtonClick(object? sender, RoutedEventArgs e)
+    {
+        Minimize();
+    }
+
+    private void OnRestoreButtonClick(object? sender, RoutedEventArgs e)
+    {
+        Restore();
+    }
+
+    /// <summary>
+    /// Sets the status bar text in both expanded and minimized views.
+    /// </summary>
+    private void SetStatusBarText(string text)
+    {
+        if (_statusBarText != null)
+            _statusBarText.Text = text;
+            
+        if (_minimizedStatusBarText != null)
+            _minimizedStatusBarText.Text = text;
+    }
+
     /// <summary>
     /// Shows the save file dialog and returns the selected file path.
     /// </summary>
@@ -370,45 +433,21 @@ public partial class RecorderOverlay : UserControl
                 DefaultExtension = "cs"
             });
 
-            return file?.Path.LocalPath;
+            if (file != null)
+            {
+                var filePath = file.Path.LocalPath;
+                _session?.SaveTestToFile(filePath);
+                SetStatusBarText($"Saved: {System.IO.Path.GetFileName(filePath)}");
+                _logger?.LogInformation("Test saved to: {FilePath}", filePath);
+                return filePath;
+            }
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Error showing save file dialog");
-            return null;
+            SetStatusBarText($"Save failed: {ex.Message}");
+            _logger?.LogError(ex, "Error saving test file");
         }
-    }
-
-    private void OnMinimizeButtonClick(object? sender, RoutedEventArgs e)
-    {
-        Minimize();
-    }
-    
-    private void OnRestoreButtonClick(object? sender, RoutedEventArgs e)
-    {
-        Restore();
-    }
-
-    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
-    {
-        base.OnDetachedFromVisualTree(e);
         
-        _updateTimer?.Stop();
-        
-        // Detach event handlers
-        if (_recordButton != null)
-            _recordButton.Click -= OnRecordButtonClick;
-        
-        if (_clearButton != null)
-            _clearButton.Click -= OnClearButtonClick;
-        
-        if (_saveButton != null)
-            _saveButton.Click -= OnSaveButtonClick;
-        
-        if (_minimizeButton != null)
-            _minimizeButton.Click -= OnMinimizeButtonClick;
-            
-        if (_restoreButton != null)
-            _restoreButton.Click -= OnRestoreButtonClick;
+        return null;
     }
 }

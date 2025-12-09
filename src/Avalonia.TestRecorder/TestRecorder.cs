@@ -75,9 +75,8 @@ public static class TestRecorder
         // Create separate window for overlay
         var overlayWindow = new Window
         {
-            Width = 200,
-            Height = 40,
             CanResize = false,
+            SizeToContent = SizeToContent.WidthAndHeight,
             ShowInTaskbar = false,
             SystemDecorations = SystemDecorations.None,
             TransparencyLevelHint = new[] { WindowTransparencyLevel.Transparent },

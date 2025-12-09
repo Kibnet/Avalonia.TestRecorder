@@ -8,7 +8,7 @@ namespace Avalonia.TestRecorder.CodeGen;
 /// <summary>
 /// Generates C# test code from recorded steps.
 /// </summary>
-internal sealed class TestCodeGenerator
+public sealed class TestCodeGenerator
 {
     private readonly CodegenOptions _options;
     private readonly string _appName;
