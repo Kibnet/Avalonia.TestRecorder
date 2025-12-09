@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Avalonia.Interactivity;
 using Avalonia.TestRecorder.Assertions;
 using Avalonia.TestRecorder.CodeGen;
@@ -606,7 +607,18 @@ public sealed class RecorderSession : IRecorderSession
         }
         
         // Validate the step with control matching
-        var validationResult = _stepValidator.ValidateStep(step, control);
+        // Ensure validation happens on the UI thread to avoid "Call from invalid thread" errors
+        ValidationResult validationResult;
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            // Already on UI thread
+            validationResult = _stepValidator.ValidateStep(step, control);
+        }
+        else
+        {
+            // Switch to UI thread for validation
+            validationResult = Dispatcher.UIThread.InvokeAsync(() => _stepValidator.ValidateStep(step, control)).Result;
+        }
         
         if (validationResult.IsSuccess)
         {

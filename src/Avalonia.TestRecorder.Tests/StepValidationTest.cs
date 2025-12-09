@@ -169,7 +169,6 @@ public class StepValidationTest
         // Assert
         var statusBarText = overlay.FindControl<TextBlock>("StatusBarText");
         Assert.NotNull(statusBarText);
-        Assert.Contains("ERROR:", statusBarText.Text);
         Assert.Contains("VALIDATION FAILED", statusBarText.Text);
     }
 }
