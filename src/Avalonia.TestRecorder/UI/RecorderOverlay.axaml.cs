@@ -22,9 +22,6 @@ public partial class RecorderOverlay : UserControl
     private bool _isMinimized = false;
     
     // UI Elements
-    private Shape? _iconOff;
-    private Shape? _iconRecording;
-    private Shape? _iconPaused;
     private TextBlock? _stepCounter;
     private Button? _recordButton;
     // Removed _pauseButton field since we're combining functionality
@@ -55,9 +52,6 @@ public partial class RecorderOverlay : UserControl
     private void InitializeControls()
     {
         // Get UI elements
-        _iconOff = this.FindControl<Shape>("IconOff");
-        _iconRecording = this.FindControl<Shape>("IconRecording");
-        _iconPaused = this.FindControl<Shape>("IconPaused");
         _stepCounter = this.FindControl<TextBlock>("StepCounter");
         _recordButton = this.FindControl<Button>("RecordButton");
         // Removed _pauseButton reference since we're combining functionality
@@ -227,7 +221,7 @@ public partial class RecorderOverlay : UserControl
             _stepCounter.Text = $"{count}";
             
             // Check if a new step was added (works in both Recording and Paused states)
-            if (count > _previousStepCount && (_session.State == RecorderState.Recording || _session.State == RecorderState.Paused))
+            if (count > _previousStepCount && (_session.State == RecorderState.Recording ))
             {
                 ShowLastStepCode();
             }
@@ -238,7 +232,7 @@ public partial class RecorderOverlay : UserControl
         if (_playIcon != null && _stopIcon != null)
         {
             // Show play icon when not recording
-            _playIcon.IsVisible = _session.State == RecorderState.Off || _session.State == RecorderState.Paused;
+            _playIcon.IsVisible = _session.State == RecorderState.Off;
             
             // Show stop icon when recording
             _stopIcon.IsVisible = _session.State == RecorderState.Recording;
@@ -333,33 +327,9 @@ public partial class RecorderOverlay : UserControl
                 break;
                 
             case RecorderState.Recording:
-                _session.Pause();
+                _session.Stop();
                 _logger?.LogInformation("Recording paused via overlay");
                 break;
-                
-            case RecorderState.Paused:
-                _session.Resume();
-                _logger?.LogInformation("Recording resumed via overlay");
-                break;
-        }
-
-        UpdateUI();
-    }
-
-    private void OnPauseButtonClick(object? sender, RoutedEventArgs e)
-    {
-        if (_session == null)
-            return;
-
-        if (_session.State == RecorderState.Recording)
-        {
-            _session.Pause();
-            _logger?.LogInformation("Recording paused via overlay");
-        }
-        else if (_session.State == RecorderState.Paused)
-        {
-            _session.Resume();
-            _logger?.LogInformation("Recording resumed via overlay");
         }
 
         UpdateUI();

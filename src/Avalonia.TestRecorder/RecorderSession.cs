@@ -97,25 +97,6 @@ public sealed class RecorderSession : IRecorderSession
         _logger?.LogInformation("Steps cleared");
     }
 
-    public void Pause()
-    {
-        if (_state == RecorderState.Recording)
-        {
-            FlushTextInput();
-            _state = RecorderState.Paused;
-            _logger?.LogInformation("Recording paused");
-        }
-    }
-
-    public void Resume()
-    {
-        if (_state == RecorderState.Paused)
-        {
-            _state = RecorderState.Recording;
-            _logger?.LogInformation("Recording resumed");
-        }
-    }
-
     /// <summary>
     /// Saves the recorded test steps to a file.
     /// </summary>
@@ -278,14 +259,6 @@ public sealed class RecorderSession : IRecorderSession
                         Stop();
                     else
                         Start();
-                    e.Handled = true;
-                    return;
-
-                case Key.P: // Pause/Resume
-                    if (_state == RecorderState.Recording)
-                        Pause();
-                    else if (_state == RecorderState.Paused)
-                        Resume();
                     e.Handled = true;
                     return;
 

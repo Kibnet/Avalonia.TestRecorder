@@ -21,17 +21,7 @@ public interface IRecorderSession : IDisposable
     /// Stops recording and clears recorded steps.
     /// </summary>
     void Stop();
-
-    /// <summary>
-    /// Pauses recording without clearing steps.
-    /// </summary>
-    void Pause();
-
-    /// <summary>
-    /// Resumes recording from paused state.
-    /// </summary>
-    void Resume();
-
+    
     /// <summary>
     /// Saves the recorded test to a file.
     /// </summary>
@@ -66,9 +56,4 @@ public enum RecorderState
     /// Actively recording interactions.
     /// </summary>
     Recording,
-
-    /// <summary>
-    /// Recording paused, steps preserved.
-    /// </summary>
-    Paused
 }
