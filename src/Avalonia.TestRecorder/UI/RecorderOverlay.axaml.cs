@@ -26,7 +26,7 @@ public partial class RecorderOverlay : UserControl
     private Shape? _iconPaused;
     private TextBlock? _stepCounter;
     private Button? _recordButton;
-    private Button? _pauseButton;
+    // Removed _pauseButton field since we're combining functionality
     private Button? _clearButton;
     private Button? _saveButton;
     private Button? _minimizeButton;
@@ -56,7 +56,7 @@ public partial class RecorderOverlay : UserControl
         _iconPaused = this.FindControl<Shape>("IconPaused");
         _stepCounter = this.FindControl<TextBlock>("StepCounter");
         _recordButton = this.FindControl<Button>("RecordButton");
-        _pauseButton = this.FindControl<Button>("PauseButton");
+        // Removed _pauseButton reference since we're combining functionality
         _clearButton = this.FindControl<Button>("ClearButton");
         _saveButton = this.FindControl<Button>("SaveButton");
         _minimizeButton = this.FindControl<Button>("MinimizeButton");
@@ -70,8 +70,7 @@ public partial class RecorderOverlay : UserControl
         if (_recordButton != null)
             _recordButton.Click += OnRecordButtonClick;
         
-        if (_pauseButton != null)
-            _pauseButton.Click += OnPauseButtonClick;
+        // Removed _pauseButton handler since we're combining functionality
         
         if (_clearButton != null)
             _clearButton.Click += OnClearButtonClick;
@@ -236,28 +235,18 @@ public partial class RecorderOverlay : UserControl
             _stepCounter.Text = $"{count}";
         }
 
-        // Update record button icon
+        // Update record button icon based on state
         if (_playIcon != null && _stopIcon != null)
         {
-            _playIcon.IsVisible = _session.State != RecorderState.Recording;
+            // Show play icon when not recording
+            _playIcon.IsVisible = _session.State == RecorderState.Off || _session.State == RecorderState.Paused;
+            
+            // Show stop icon when recording
             _stopIcon.IsVisible = _session.State == RecorderState.Recording;
         }
 
         // Update button enabled states
-        if (_pauseButton != null)
-        {
-            _pauseButton.IsEnabled = _session.State == RecorderState.Recording || _session.State == RecorderState.Paused;
-        }
-
-        if (_clearButton != null)
-        {
-            _clearButton.IsEnabled = _session.GetStepCount() > 0;
-        }
-
-        if (_saveButton != null)
-        {
-            _saveButton.IsEnabled = _session.GetStepCount() > 0;
-        }
+        // The record button is always enabled now since it handles all states
     }
 
     private void OnRecordButtonClick(object? sender, RoutedEventArgs e)
@@ -265,15 +254,22 @@ public partial class RecorderOverlay : UserControl
         if (_session == null)
             return;
 
-        if (_session.State == RecorderState.Recording)
+        switch (_session.State)
         {
-            _session.Stop();
-            _logger?.LogInformation("Recording stopped via overlay");
-        }
-        else
-        {
-            _session.Start();
-            _logger?.LogInformation("Recording started via overlay");
+            case RecorderState.Off:
+                _session.Start();
+                _logger?.LogInformation("Recording started via overlay");
+                break;
+                
+            case RecorderState.Recording:
+                _session.Pause();
+                _logger?.LogInformation("Recording paused via overlay");
+                break;
+                
+            case RecorderState.Paused:
+                _session.Resume();
+                _logger?.LogInformation("Recording resumed via overlay");
+                break;
         }
 
         UpdateUI();
@@ -402,9 +398,6 @@ public partial class RecorderOverlay : UserControl
         // Detach event handlers
         if (_recordButton != null)
             _recordButton.Click -= OnRecordButtonClick;
-        
-        if (_pauseButton != null)
-            _pauseButton.Click -= OnPauseButtonClick;
         
         if (_clearButton != null)
             _clearButton.Click -= OnClearButtonClick;

@@ -65,31 +65,17 @@
                     </Viewbox>
                 </Button>
 
-                <!-- Record/Stop Button -->
+                <!-- Record/Pause Button -->
                 <Button Name="RecordButton" 
                         Width="30" Height="30" 
                         Padding="4"
-                        ToolTip.Tip="Start/Stop Recording (Ctrl+Shift+R)">
+                        ToolTip.Tip="Record/Pause (Ctrl+Shift+R)">
                     <Viewbox Width="20" Height="20">
                         <Canvas Width="24" Height="24">
                             <!-- Play Icon -->
                             <Path Fill="#27AE60" Name="PlayIcon" Data="M8,5.14V19.14L19,12.14L8,5.14Z"/>
                             <!-- Stop Icon -->
                             <Rectangle Width="14" Height="14" Canvas.Left="5" Canvas.Top="5" Fill="#E74C3C" Name="StopIcon" IsVisible="False"/>
-                        </Canvas>
-                    </Viewbox>
-                </Button>
-
-                <!-- Pause/Resume Button -->
-                <Button Name="PauseButton" 
-                        Width="30" Height="30" 
-                        Padding="4"
-                        ToolTip.Tip="Pause/Resume (Ctrl+Shift+P)">
-                    <Viewbox Width="20" Height="20">
-                        <Canvas Width="24" Height="24">
-                            <!-- Pause Icon -->
-                            <Rectangle Width="4" Height="14" Canvas.Left="7" Canvas.Top="5" Fill="#F39C12" Name="PauseIcon"/>
-                            <Rectangle Width="4" Height="14" Canvas.Left="13" Canvas.Top="5" Fill="#F39C12"/>
                         </Canvas>
                     </Viewbox>
                 </Button>

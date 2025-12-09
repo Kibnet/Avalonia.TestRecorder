@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Headless.XUnit;
 using Avalonia.TestRecorder.UI;
 using Xunit;
 
@@ -6,7 +7,7 @@ namespace Avalonia.TestRecorder.Tests
 {
     public class OverlayMinimizeRestoreTests
     {
-        [Fact]
+        [AvaloniaFact]
         public void TestOverlayMinimizeRestore()
         {
             // Create overlay control
@@ -23,8 +24,8 @@ namespace Avalonia.TestRecorder.Tests
             overlay.Restore();
             Assert.False(overlay.Classes.Contains("minimized"));
         }
-        
-        [Fact]
+
+        [AvaloniaFact]
         public void TestMinimizeWhenAlreadyMinimized()
         {
             // Create overlay control
@@ -36,8 +37,8 @@ namespace Avalonia.TestRecorder.Tests
             
             Assert.True(overlay.Classes.Contains("minimized"));
         }
-        
-        [Fact]
+
+        [AvaloniaFact]
         public void TestRestoreWhenNotMinimized()
         {
             // Create overlay control
