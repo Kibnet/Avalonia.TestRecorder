@@ -29,6 +29,9 @@ public sealed class RecorderSession : IRecorderSession
     private string _accumulatedText = string.Empty;
     private Point _lastPointerPosition;
     private Control? _lastHoveredControl;
+    
+    // Callback for showing save dialog
+    private Func<Task<string?>>? _showSaveDialogCallback;
 
     public RecorderState State => _state;
 
@@ -279,8 +282,15 @@ public sealed class RecorderSession : IRecorderSession
                     return;
 
                 case Key.S: // Save
-                    var path = SaveTestToFile();
-                    Debug.WriteLine($"Test saved to: {path}");
+                    // Instead of directly saving, show the save dialog
+                    _ = Task.Run(async () =>
+                    {
+                        var path = await SaveTestToFileWithDialog();
+                        if (path != null)
+                        {
+                            Debug.WriteLine($"Test saved to: {path}");
+                        }
+                    });
                     e.Handled = true;
                     return;
 
@@ -421,6 +431,39 @@ public sealed class RecorderSession : IRecorderSession
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Error finding control at position {Position}", position);
+        }
+        
+        return null;
+    }
+
+    /// <summary>
+    /// Sets a callback function for showing the save file dialog.
+    /// This is used to enable the keyboard shortcut to show the save dialog.
+    /// </summary>
+    /// <param name="callback">Function that shows the save dialog and returns the selected file path, or null if cancelled.</param>
+    public void SetSaveDialogCallback(Func<Task<string?>> callback)
+    {
+        _showSaveDialogCallback = callback;
+    }
+
+    /// <summary>
+    /// Saves the test code to a file selected by the user via dialog.
+    /// </summary>
+    /// <returns>The path to the saved file, or null if cancelled.</returns>
+    public async Task<string?> SaveTestToFileWithDialog()
+    {
+        if (_showSaveDialogCallback != null)
+        {
+            var filePath = await _showSaveDialogCallback();
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                return SaveTestToFile(filePath);
+            }
+        }
+        else
+        {
+            // Fallback to default behavior if no callback is set
+            return SaveTestToFile();
         }
         
         return null;

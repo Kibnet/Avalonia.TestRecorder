@@ -138,6 +138,10 @@ public partial class RecorderOverlay : UserControl
     {
         _session = session;
         _logger = logger;
+        
+        // Set the callback for showing the save dialog
+        _session.SetSaveDialogCallback(ShowSaveFileDialog);
+        
         UpdateUI();
     }
 
@@ -340,6 +344,42 @@ public partial class RecorderOverlay : UserControl
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Error saving test file");
+        }
+    }
+    
+    /// <summary>
+    /// Shows the save file dialog and returns the selected file path.
+    /// </summary>
+    /// <returns>The selected file path, or null if cancelled.</returns>
+    private async Task<string?> ShowSaveFileDialog()
+    {
+        var window = TopLevel.GetTopLevel(this) as Window;
+        if (window == null)
+            return null;
+
+        try
+        {
+            // Show save file dialog
+            var file = await window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            {
+                Title = "Save Test Code",
+                SuggestedFileName = _session?.GetSuggestedFileName() ?? "Test.cs",
+                FileTypeChoices = new[]
+                {
+                    new FilePickerFileType("C# Source File")
+                    {
+                        Patterns = new[] { "*.cs" }
+                    }
+                },
+                DefaultExtension = "cs"
+            });
+
+            return file?.Path.LocalPath;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error showing save file dialog");
+            return null;
         }
     }
 

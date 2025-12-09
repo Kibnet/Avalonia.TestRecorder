@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace Avalonia.TestRecorder;
 
 /// <summary>
@@ -42,6 +44,12 @@ public interface IRecorderSession : IDisposable
     /// </summary>
     /// <returns>The generated C# test code.</returns>
     string ExportTestCode();
+    
+    /// <summary>
+    /// Saves the test code to a file selected by the user via dialog.
+    /// </summary>
+    /// <returns>The path to the saved file, or null if cancelled.</returns>
+    Task<string?> SaveTestToFileWithDialog();
 }
 
 /// <summary>
