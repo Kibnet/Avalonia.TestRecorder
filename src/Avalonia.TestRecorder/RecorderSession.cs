@@ -114,6 +114,10 @@ public sealed class RecorderSession : IRecorderSession
         }
     }
 
+    /// <summary>
+    /// Saves the recorded test steps to a file.
+    /// </summary>
+    /// <returns></returns>
     public string SaveTestToFile()
     {
         var outputDir = _options.OutputDirectory 
@@ -160,7 +164,7 @@ public sealed class RecorderSession : IRecorderSession
     public string ExportTestCode()
     {
         FlushTextInput();
-        return _codeGenerator.Generate(_steps, _options.ScenarioName);
+        return _codeGenerator.Generate(_steps, _options.ScenarioName, _window);
     }
 
     public void Dispose()

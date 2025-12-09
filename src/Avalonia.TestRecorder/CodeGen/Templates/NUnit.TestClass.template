@@ -1,12 +1,12 @@
-using Avalonia.Headless.XUnit;
+using Avalonia.Headless.NUnit;
 using Avalonia.HeadlessTestKit;
-using Xunit;
+using NUnit.Framework;
 
 namespace {Namespace};
 
 public partial class {ClassName}
 {
-    [AvaloniaFact]
+    [AvaloniaTest]
     public void {TestMethod}()
     {
         // Initialize window with DataContext

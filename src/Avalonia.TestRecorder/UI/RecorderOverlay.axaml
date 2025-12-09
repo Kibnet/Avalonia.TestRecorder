@@ -129,6 +129,7 @@
                            Padding="2"
                            FontSize="12"
                            MinWidth="24"
+                           ToolTip.Tip="Steps counter"
                            Foreground="{DynamicResource RecorderTextColor}"/>
                 </Border>
             </StackPanel>
