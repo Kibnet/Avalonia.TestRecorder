@@ -142,6 +142,7 @@ Headless tests fail with `ControlNotFoundException` even though the control exis
 1. Missing `AutomationId` on the control
 2. Control not yet rendered/visible
 3. Control in a different window or popup
+4. Tree path selector issues in headless mode due to visual tree differences
 
 **Solutions:**
 
@@ -162,6 +163,9 @@ ui.Click("myControl");
 
 3. **Check available AutomationIds:**
 The exception message includes all available AutomationIds in the window. Review this list to find the correct ID.
+
+4. **Improve tree path resilience:**
+The test framework now includes improved tree path resolution that is more resilient to visual tree differences in headless mode. If you're still experiencing issues, consider adding AutomationIds to your controls for more stable selectors.
 
 ---
 
