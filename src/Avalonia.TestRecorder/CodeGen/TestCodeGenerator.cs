@@ -88,28 +88,42 @@ public sealed class TestCodeGenerator
         var sb = new StringBuilder();
         foreach (var step in steps)
         {
-            var warning = step.Warning != null ? $" // {step.Warning}" : "";
-            var line = step.Type switch
-            {
-                StepType.Click => $"            ui.Click(\"{step.Selector}\");{warning}",
-                StepType.RightClick => $"            ui.RightClick(\"{step.Selector}\");{warning}",
-                StepType.DoubleClick => $"            ui.DoubleClick(\"{step.Selector}\");{warning}",
-                StepType.TypeText => $"            ui.TypeText(\"{step.Selector}\", \"{EscapeString(step.Parameter ?? "")}\");{warning}",
-                StepType.KeyPress => $"            ui.KeyPress(\"{step.Parameter}\");{warning}",
-                StepType.Scroll => $"            ui.Scroll(\"{step.Selector}\", {step.Parameter});{warning}",
-                StepType.Hover => $"            ui.Hover(\"{step.Selector}\");{warning}",
-                StepType.AssertText => $"            ui.AssertText(\"{step.Selector}\", \"{EscapeString(step.Parameter ?? "")}\");{warning}",
-                StepType.AssertChecked => $"            ui.AssertChecked(\"{step.Selector}\", {step.Parameter});{warning}",
-                StepType.AssertVisible => $"            ui.AssertVisible(\"{step.Selector}\");{warning}",
-                StepType.AssertEnabled => $"            ui.AssertEnabled(\"{step.Selector}\");{warning}",
-                StepType.SelectItem => $"            ui.SelectItem(\"{step.Selector}\", \"{EscapeString(step.Parameter ?? "")}\");{warning}",
-                _ => $"            // Unknown step type: {step.Type}"
-            };
-            sb.AppendLine(line);
+            sb.AppendLine(GenerateStepLine(step));
         }
         return sb.ToString().TrimEnd();
     }
 
+    /// <summary>
+    /// Generates the C# code line for a single recorded step.
+    /// Used by both test file generation and UI previews to keep logic in one place.
+    /// </summary>
+    public string GenerateStepCode(RecordedStep step)
+    {
+        // For previews we don't need leading indentation
+        return GenerateStepLine(step).TrimStart();
+    }
+
+    private string GenerateStepLine(RecordedStep step)
+    {
+        var warning = step.Warning != null ? $" // {step.Warning}" : "";
+        var intend = "        ";
+        return step.Type switch
+        {
+            StepType.Click         => $"{intend}ui.Click(\"{step.Selector}\");{warning}",
+            StepType.RightClick    => $"{intend}ui.RightClick(\"{step.Selector}\");{warning}",
+            StepType.DoubleClick   => $"{intend}ui.DoubleClick(\"{step.Selector}\");{warning}",
+            StepType.TypeText      => $"{intend}ui.TypeText(\"{step.Selector}\", \"{EscapeString(step.Parameter ?? "")}\");{warning}",
+            StepType.KeyPress      => $"{intend}ui.KeyPress(\"{step.Parameter}\");{warning}",
+            StepType.Scroll        => $"{intend}ui.Scroll(\"{step.Selector}\", {step.Parameter});{warning}",
+            StepType.Hover         => $"{intend}ui.Hover(\"{step.Selector}\");{warning}",
+            StepType.AssertText    => $"{intend}ui.AssertText(\"{step.Selector}\", \"{EscapeString(step.Parameter ?? "")}\");{warning}",
+            StepType.AssertChecked => $"{intend}ui.AssertChecked(\"{step.Selector}\", {step.Parameter});{warning}",
+            StepType.AssertVisible => $"{intend}ui.AssertVisible(\"{step.Selector}\");{warning}",
+            StepType.AssertEnabled => $"{intend}ui.AssertEnabled(\"{step.Selector}\");{warning}",
+            StepType.SelectItem    => $"{intend}ui.SelectItem(\"{step.Selector}\", \"{EscapeString(step.Parameter ?? "")}\");{warning}",
+            _                      => $"{intend}// Unknown step type: {step.Type} Selector: {step.Selector} Parameter: {step.Parameter}"
+        };
+    }
     private string EscapeString(string str)
     {
         return str.Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r");

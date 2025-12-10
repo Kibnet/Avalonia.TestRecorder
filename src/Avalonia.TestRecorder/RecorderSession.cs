@@ -587,6 +587,11 @@ public sealed class RecorderSession : IRecorderSession
         _onMinimizeRestoreCallback = callback;
     }
 
+    public string GenerateStepCodePreview(RecordedStep step)
+    {
+        return _codeGenerator.GenerateStepCode(step);
+    }
+
     /// <summary>
     /// Saves the test code to a file selected by the user via dialog.
     /// </summary>
@@ -641,7 +646,17 @@ public sealed class RecorderSession : IRecorderSession
         
         if (validationResult.IsSuccess)
         {
-            // Step is valid, add it directly
+            // Step is valid, annotate the warning field with validation status and add it
+            step = new RecordedStep
+            {
+                Type = step.Type,
+                Selector = step.Selector,
+                Parameter = step.Parameter,
+                Quality = step.Quality,
+                Warning = step.Warning == null
+                    ? "VALIDATION OK"
+                    : $"{step.Warning}; VALIDATION OK"
+            };
             _steps.Add(step);
         }
         else
@@ -731,7 +746,7 @@ public sealed class RecorderSession : IRecorderSession
                 Quality = SelectorQuality.High
             };
 
-            _steps.Add(step);
+            ValidateAndAddStep(step, comboBox);
             _logger?.LogDebug("Recorded ComboBox selection: {ComboBoxId} = {SelectedValue}", comboBoxId, selectedValue);
         }
         else
@@ -778,7 +793,7 @@ public sealed class RecorderSession : IRecorderSession
                 Quality = SelectorQuality.High
             };
 
-            _steps.Add(step);
+            ValidateAndAddStep(step, listBox);
             _logger?.LogDebug("Recorded ListBox selection: {ListBoxId} = {SelectedValue}", listBoxId, selectedValue);
         }
         else

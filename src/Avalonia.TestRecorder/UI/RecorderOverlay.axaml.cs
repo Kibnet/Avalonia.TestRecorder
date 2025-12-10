@@ -298,22 +298,11 @@ public partial class RecorderOverlay : UserControl
     /// </summary>
     private string GenerateStepCode(RecordedStep step)
     {
-        var warning = step.Warning != null ? $" // {step.Warning}" : "";
-        return step.Type switch
-        {
-            StepType.Click => $"ui.Click(\"{step.Selector}\");{warning}",
-            StepType.RightClick => $"ui.RightClick(\"{step.Selector}\");{warning}",
-            StepType.DoubleClick => $"ui.DoubleClick(\"{step.Selector}\");{warning}",
-            StepType.TypeText => $"ui.TypeText(\"{step.Selector}\", \"{EscapeString(step.Parameter ?? "")}\");{warning}",
-            StepType.KeyPress => $"ui.KeyPress(\"{step.Parameter}\");{warning}",
-            StepType.Scroll => $"ui.Scroll(\"{step.Selector}\", {step.Parameter});{warning}",
-            StepType.Hover => $"ui.Hover(\"{step.Selector}\");{warning}",
-            StepType.AssertText => $"ui.AssertText(\"{step.Selector}\", \"{EscapeString(step.Parameter ?? "")}\");{warning}",
-            StepType.AssertChecked => $"ui.AssertChecked(\"{step.Selector}\", {step.Parameter});{warning}",
-            StepType.AssertVisible => $"ui.AssertVisible(\"{step.Selector}\");{warning}",
-            StepType.AssertEnabled => $"ui.AssertEnabled(\"{step.Selector}\");{warning}",
-            _ => $"// Unknown step type: {step.Type}"
-        };
+        if (_session == null)
+            return string.Empty;
+
+        // Delegate to the recorder session's code generator to ensure consistency
+        return _session.GenerateStepCodePreview(step);
     }
 
     private string EscapeString(string str)

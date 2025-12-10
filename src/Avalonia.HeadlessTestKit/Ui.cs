@@ -539,9 +539,9 @@ public class Ui
         if (AutomationProperties.GetAutomationId(root) == automationId)
             return root;
 
-        foreach (var child in root.GetVisualChildren().OfType<Control>())
+        foreach (var child in root.GetVisualChildren())
         {
-            var result = FindByAutomationId(child, automationId);
+            var result = FindByAutomationId(child as Control, automationId);
             if (result != null)
                 return result;
         }
