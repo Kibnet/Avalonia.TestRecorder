@@ -7,6 +7,7 @@ using Avalonia.TestRecorder.Assertions;
 using Avalonia.TestRecorder.CodeGen;
 using Avalonia.TestRecorder.Selectors;
 using Avalonia.VisualTree;
+using Avalonia.Automation;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Reflection;
@@ -170,6 +171,23 @@ public sealed class RecorderSession : IRecorderSession
         _window.AddHandler(InputElement.TextInputEvent, OnTextInput, RoutingStrategies.Tunnel);
         // Use Bubble strategy to ensure keyboard shortcuts work even when controls like TextBox have focus
         _window.AddHandler(InputElement.KeyDownEvent, OnKeyDown, RoutingStrategies.Bubble);
+        
+        // Subscribe to window loaded event to monitor for ComboBox and ListBox controls
+        _window.Loaded += OnWindowLoaded;
+    }
+
+    private void OnWindowLoaded(object? sender, RoutedEventArgs e)
+    {
+        _logger?.LogDebug("Window loaded event fired");
+        if (_window.Content is Control content)
+        {
+            _logger?.LogDebug("Window content found, subscribing to selection events");
+            SubscribeToSelectionEvents(content);
+        }
+        else
+        {
+            _logger?.LogDebug("No window content found");
+        }
     }
 
     private void DetachEventHandlers()
@@ -178,6 +196,7 @@ public sealed class RecorderSession : IRecorderSession
         _window.RemoveHandler(InputElement.PointerMovedEvent, OnPointerMoved);
         _window.RemoveHandler(InputElement.TextInputEvent, OnTextInput);
         _window.RemoveHandler(InputElement.KeyDownEvent, OnKeyDown);
+        _window.Loaded -= OnWindowLoaded;
     }
 
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -642,5 +661,167 @@ public sealed class RecorderSession : IRecorderSession
                 
             _logger?.LogWarning("Step validation failed completely: {Message}", validationResult.ErrorMessage);
         }
+    }
+
+    private void SubscribeToSelectionEvents(Control rootControl)
+    {
+        _logger?.LogDebug("Searching for ComboBox and ListBox controls to subscribe to selection events");
+        
+        // Find all ComboBox and ListBox controls in the visual tree
+        int comboBoxCount = 0;
+        int listBoxCount = 0;
+        
+        foreach (var control in rootControl.GetVisualDescendants().OfType<Control>())
+        {
+            if (control is ComboBox comboBox)
+            {
+                comboBoxCount++;
+                comboBox.SelectionChanged += OnComboBoxSelectionChanged;
+                _logger?.LogDebug("Subscribed to ComboBox SelectionChanged event: {ControlName}", 
+                    AutomationProperties.GetAutomationId(comboBox) ?? comboBox.Name ?? "unnamed");
+            }
+            else if (control is ListBox listBox)
+            {
+                listBoxCount++;
+                listBox.SelectionChanged += OnListBoxSelectionChanged;
+                _logger?.LogDebug("Subscribed to ListBox SelectionChanged event: {ControlName}", 
+                    AutomationProperties.GetAutomationId(listBox) ?? listBox.Name ?? "unnamed");
+            }
+        }
+        
+        _logger?.LogDebug("Found and subscribed to {ComboBoxCount} ComboBox and {ListBoxCount} ListBox controls", 
+            comboBoxCount, listBoxCount);
+    }
+
+    private void OnComboBoxSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_state != RecorderState.Recording || sender is not ComboBox comboBox)
+            return;
+
+        _logger?.LogDebug("ComboBox selection changed detected");
+
+        // Get the AutomationId of the ComboBox
+        var comboBoxId = AutomationProperties.GetAutomationId(comboBox);
+        if (string.IsNullOrEmpty(comboBoxId))
+        {
+            // Try to find a parent with AutomationId
+            var parentWithId = FindControlWithAutomationId(comboBox);
+            if (parentWithId != null)
+            {
+                comboBoxId = AutomationProperties.GetAutomationId(parentWithId);
+            }
+        }
+
+        if (string.IsNullOrEmpty(comboBoxId))
+        {
+            _logger?.LogDebug("Skipping ComboBox selection recording - no AutomationId found");
+            return; // Skip if we can't identify the ComboBox
+        }
+
+        // Get the selected value
+        var selectedValue = GetSelectedItemText(comboBox.SelectedItem);
+
+        if (!string.IsNullOrEmpty(selectedValue))
+        {
+            var step = new RecordedStep
+            {
+                Type = StepType.SelectItem,
+                Selector = comboBoxId,
+                Parameter = selectedValue,
+                Quality = SelectorQuality.High
+            };
+
+            _steps.Add(step);
+            _logger?.LogDebug("Recorded ComboBox selection: {ComboBoxId} = {SelectedValue}", comboBoxId, selectedValue);
+        }
+        else
+        {
+            _logger?.LogDebug("Skipping ComboBox selection recording - no selected value found");
+        }
+    }
+
+    private void OnListBoxSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_state != RecorderState.Recording || sender is not ListBox listBox)
+            return;
+
+        _logger?.LogDebug("ListBox selection changed detected");
+
+        // Get the AutomationId of the ListBox
+        var listBoxId = AutomationProperties.GetAutomationId(listBox);
+        if (string.IsNullOrEmpty(listBoxId))
+        {
+            // Try to find a parent with AutomationId
+            var parentWithId = FindControlWithAutomationId(listBox);
+            if (parentWithId != null)
+            {
+                listBoxId = AutomationProperties.GetAutomationId(parentWithId);
+            }
+        }
+
+        if (string.IsNullOrEmpty(listBoxId))
+        {
+            _logger?.LogDebug("Skipping ListBox selection recording - no AutomationId found");
+            return; // Skip if we can't identify the ListBox
+        }
+
+        // Get the selected value
+        var selectedValue = GetSelectedItemText(listBox.SelectedItem);
+
+        if (!string.IsNullOrEmpty(selectedValue))
+        {
+            var step = new RecordedStep
+            {
+                Type = StepType.SelectItem,
+                Selector = listBoxId,
+                Parameter = selectedValue,
+                Quality = SelectorQuality.High
+            };
+
+            _steps.Add(step);
+            _logger?.LogDebug("Recorded ListBox selection: {ListBoxId} = {SelectedValue}", listBoxId, selectedValue);
+        }
+        else
+        {
+            _logger?.LogDebug("Skipping ListBox selection recording - no selected value found");
+        }
+    }
+
+    private string GetSelectedItemText(object? selectedItem)
+    {
+        if (selectedItem == null)
+            return string.Empty;
+
+        // Try to get the text representation of the selected item
+        return selectedItem switch
+        {
+            ContentControl contentControl => contentControl.Content?.ToString() ?? string.Empty,
+            TextBlock textBlock => textBlock.Text ?? string.Empty,
+            string str => str,
+            _ => selectedItem.ToString() ?? string.Empty
+        };
+    }
+
+    private Control? FindControlWithAutomationId(Control startControl)
+    {
+        var current = startControl as Visual;
+
+        while (current != null)
+        {
+            if (current is Control ctrl)
+            {
+                var automationId = AutomationProperties.GetAutomationId(ctrl);
+                if (!string.IsNullOrEmpty(automationId))
+                {
+                    return ctrl;
+                }
+            }
+
+            current = current.GetVisualParent();
+            if (current is Window)
+                break;
+        }
+
+        return null;
     }
 }

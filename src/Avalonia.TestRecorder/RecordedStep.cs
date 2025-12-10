@@ -28,7 +28,8 @@ public enum StepType
     AssertText,
     AssertChecked,
     AssertVisible,
-    AssertEnabled
+    AssertEnabled,
+    SelectItem
 }
 
 /// <summary>

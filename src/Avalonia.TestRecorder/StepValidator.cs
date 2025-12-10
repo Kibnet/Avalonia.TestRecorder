@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.HeadlessTestKit;
 using Avalonia.TestRecorder.Selectors;
 using Microsoft.Extensions.Logging;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.VisualTree;
+using Avalonia.Automation;
 
 namespace Avalonia.TestRecorder;
 
@@ -35,7 +37,10 @@ public class StepValidator
         try
         {
             // Create a temporary UI helper to test the step
-            var ui = new ValidationUi(_window);
+            var ui = new ValidationUi(_window)
+            {
+                IsValidationMode = true
+            };
             
             // Try to find the control first to check if it matches the original
             if (originalControl != null)
@@ -51,36 +56,42 @@ public class StepValidator
             switch (step.Type)
             {
                 case StepType.Click:
-                    ui.ValidateClick(step.Selector);
+                    ui.Click(step.Selector);
                     break;
                 case StepType.RightClick:
-                    ui.ValidateClick(step.Selector); // Same validation as click
+                    ui.RightClick(step.Selector);
                     break;
                 case StepType.DoubleClick:
-                    ui.ValidateClick(step.Selector); // Same validation as click
+                    ui.DoubleClick(step.Selector);
                     break;
                 case StepType.TypeText:
-                    ui.ValidateTypeText(step.Selector);
+                    ui.TypeText(step.Selector, step.Parameter ?? string.Empty);
                     break;
                 case StepType.Hover:
-                    ui.ValidateClick(step.Selector); // Same validation as click
+                    ui.Hover(step.Selector);
                     break;
                 case StepType.AssertText:
-                    ui.AssertText(step.Selector, step.Parameter); 
+                    ui.AssertText(step.Selector, step.Parameter ?? string.Empty); 
                     break;
                 case StepType.AssertChecked:
-                    //ui.AssertChecked(step.Selector, step.Parameter);
+                    ui.AssertChecked(step.Selector, bool.Parse(step.Parameter ?? "false"));
                     break;
                 case StepType.AssertVisible:
-                    //ui.AssertVisible(step.Selector, step.Parameter);
+                    ui.AssertVisible(step.Selector);
                     break;
                 case StepType.AssertEnabled:
-                    //ui.AssertEnabled(step.Selector, step.Parameter);
+                    ui.AssertEnabled(step.Selector);
+                    break;
+                case StepType.SelectItem:
+                    ui.SelectItem(step.Selector, step.Parameter ?? string.Empty);
                     break;
                 case StepType.KeyPress:
+                    ui.KeyPress(step.Parameter ?? string.Empty);
+                    break;
                 case StepType.Scroll:
-                    // These don't require element finding, so they're always valid
-                    return new ValidationResult(true, null);
+                    var (deltaX, deltaY) = ParseScrollParameter(step.Parameter);
+                    ui.Scroll(step.Selector, deltaX, deltaY);
+                    break;
                 default:
                     return new ValidationResult(false, $"Unknown step type: {step.Type}");
             }
@@ -92,6 +103,30 @@ public class StepValidator
             _logger?.LogWarning(ex, "Step validation failed for selector: {Selector}", step.Selector);
             return new ValidationResult(false, ex.Message);
         }
+    }
+
+    private (double deltaX, double deltaY) ParseScrollParameter(string? parameter)
+    {
+        if (string.IsNullOrWhiteSpace(parameter))
+        {
+            return (0, 0);
+        }
+
+        var parts = parameter.Split(',');
+        double deltaX = 0;
+        double deltaY = 0;
+
+        if (parts.Length > 0)
+        {
+            double.TryParse(parts[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out deltaX);
+        }
+
+        if (parts.Length > 1)
+        {
+            double.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out deltaY);
+        }
+
+        return (deltaX, deltaY);
     }
     
     /// <summary>
@@ -179,7 +214,7 @@ public class ValidationResult
 }
 
 /// <summary>
-/// Specialized UI helper for validation that doesn't actually perform actions.
+/// Specialized UI helper for validation that exposes protected APIs from Ui.
 /// </summary>
 internal class ValidationUi : Ui
 {
@@ -193,23 +228,5 @@ internal class ValidationUi : Ui
     public Control FindControlPublic(string id)
     {
         return FindControl(id);
-    }
-    
-    /// <summary>
-    /// Validates that a click operation can find the target element.
-    /// </summary>
-    public void ValidateClick(string id)
-    {
-        // This will throw ControlNotFoundException if element cannot be found
-        _ = FindControl(id);
-    }
-    
-    /// <summary>
-    /// Validates that a type text operation can find the target element.
-    /// </summary>
-    public void ValidateTypeText(string id)
-    {
-        // This will throw ControlNotFoundException if element cannot be found
-        _ = FindControl(id);
     }
 }

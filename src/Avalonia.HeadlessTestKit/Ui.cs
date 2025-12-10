@@ -6,7 +6,9 @@ using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using System;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Avalonia.HeadlessTestKit;
 
@@ -19,6 +21,11 @@ public class Ui
     private readonly Window _window;
     private readonly TimeSpan _defaultTimeout = TimeSpan.FromSeconds(5);
     private readonly int _settleDelayMs = 10;
+
+    /// <summary>
+    /// When true, Ui methods run in validation mode and avoid performing side-effect actions.
+    /// </summary>
+    public bool IsValidationMode { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Ui"/> class.
@@ -38,6 +45,12 @@ public class Ui
     public void Click(string id)
     {
         var control = FindControl(id);
+        
+        if (IsValidationMode)
+        {
+            // In validation mode we just ensure the control can be found.
+            return;
+        }
         
         // Special handling for buttons - invoke the click directly
         if (control is Button button)
@@ -68,6 +81,13 @@ public class Ui
     {
         var control = FindControl(id);
         var point = GetCenterPoint(control);
+        
+        if (IsValidationMode)
+        {
+            // Ensure control lookup and coordinate calculation succeed, but do not send events.
+            return;
+        }
+        
         RaisePointerEvent(control, point, PointerEventType.Press, rightButton: true);
         RaisePointerEvent(control, point, PointerEventType.Release, rightButton: true);
         ProcessUiEvents();
@@ -81,6 +101,13 @@ public class Ui
     {
         var control = FindControl(id);
         var point = GetCenterPoint(control);
+        
+        if (IsValidationMode)
+        {
+            // Ensure control lookup and coordinate calculation succeed, but do not send events.
+            return;
+        }
+        
         RaisePointerEvent(control, point, PointerEventType.Press);
         RaisePointerEvent(control, point, PointerEventType.Release);
         RaisePointerEvent(control, point, PointerEventType.Press, clickCount: 2);
@@ -96,6 +123,13 @@ public class Ui
     {
         var control = FindControl(id);
         var point = GetCenterPoint(control);
+        
+        if (IsValidationMode)
+        {
+            // Ensure control lookup and coordinate calculation succeed, but do not send events.
+            return;
+        }
+        
         RaisePointerEvent(control, point, PointerEventType.Move);
         ProcessUiEvents();
     }
@@ -112,6 +146,12 @@ public class Ui
     public void TypeText(string id, string text)
     {
         var control = FindControl(id);
+        
+        if (IsValidationMode)
+        {
+            // Ensure control lookup succeeds, but do not send text input events.
+            return;
+        }
         
         // Focus the control first
         control.Focus();
@@ -142,6 +182,12 @@ public class Ui
             throw new ArgumentException($"Invalid key: {keyText}", nameof(keyText));
         }
 
+        if (IsValidationMode)
+        {
+            // In validation mode, just ensure the key name is valid.
+            return;
+        }
+
         var args = new KeyEventArgs
         {
             RoutedEvent = InputElement.KeyDownEvent,
@@ -167,6 +213,12 @@ public class Ui
         var control = FindControl(id);
         var point = GetCenterPoint(control);
 
+        if (IsValidationMode)
+        {
+            // Ensure control lookup and coordinate calculation succeed, but do not send events.
+            return;
+        }
+
         var pointer = new Pointer(0, PointerType.Mouse, true);
         var rootPoint = control.TranslatePoint(point, _window) ?? point;
         var properties = new PointerPointProperties(RawInputModifiers.None, PointerUpdateKind.Other);
@@ -187,6 +239,126 @@ public class Ui
 
         control.RaiseEvent(args);
         ProcessUiEvents();
+    }
+
+    #endregion
+
+    #region Selection Operations
+
+    /// <summary>
+    /// Selects an item in a ComboBox or ListBox by its text value.
+    /// </summary>
+    /// <param name="id">The AutomationId of the ComboBox or ListBox.</param>
+    /// <param name="itemText">The text of the item to select.</param>
+    public void SelectItem(string id, string itemText)
+    {
+        var control = FindControl(id);
+        
+        if (control is ComboBox comboBox)
+        {
+            SelectComboBoxItem(comboBox, itemText);
+        }
+        else if (control is ListBox listBox)
+        {
+            SelectListBoxItem(listBox, itemText);
+        }
+        else
+        {
+            throw new InvalidOperationException($"Control with id '{id}' is not a ComboBox or ListBox");
+        }
+        
+        ProcessUiEvents();
+    }
+
+    private void SelectComboBoxItem(ComboBox comboBox, string itemText)
+    {
+        // Focus the ComboBox first (only in execution mode)
+        if (!IsValidationMode)
+        {
+            comboBox.Focus();
+            ProcessUiEvents();
+        }
+        
+        // Try to find the item by text in the Items collection
+        for (int i = 0; i < comboBox.Items.Count; i++)
+        {
+            var item = comboBox.Items[i];
+            var itemTextContent = GetItemText(item);
+            
+            if (itemTextContent.Equals(itemText, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!IsValidationMode)
+                {
+                    comboBox.SelectedIndex = i;
+                    ProcessUiEvents();
+                }
+                return;
+            }
+        }
+        
+        // If not found in Items, try to find in the visual tree
+        var listBox = comboBox.GetVisualDescendants().OfType<ListBox>().FirstOrDefault();
+        if (listBox != null)
+        {
+            for (int i = 0; i < listBox.Items.Count; i++)
+            {
+                var item = listBox.Items[i];
+                var itemTextContent = GetItemText(item);
+                
+                if (itemTextContent.Equals(itemText, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!IsValidationMode)
+                    {
+                        listBox.SelectedIndex = i;
+                        ProcessUiEvents();
+                    }
+                    return;
+                }
+            }
+        }
+        
+        throw new ArgumentException($"Item '{itemText}' not found in ComboBox '{AutomationProperties.GetAutomationId(comboBox) ?? comboBox.Name ?? "unnamed"}'");
+    }
+
+    private void SelectListBoxItem(ListBox listBox, string itemText)
+    {
+        // Focus the ListBox first (only in execution mode)
+        if (!IsValidationMode)
+        {
+            listBox.Focus();
+            ProcessUiEvents();
+        }
+        
+        // Try to find the item by text in the Items collection
+        for (int i = 0; i < listBox.Items.Count; i++)
+        {
+            var item = listBox.Items[i];
+            var itemTextContent = GetItemText(item);
+            
+            if (itemTextContent.Equals(itemText, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!IsValidationMode)
+                {
+                    listBox.SelectedIndex = i;
+                    ProcessUiEvents();
+                }
+                return;
+            }
+        }
+        
+        throw new ArgumentException($"Item '{itemText}' not found in ListBox '{AutomationProperties.GetAutomationId(listBox) ?? listBox.Name ?? "unnamed"}'");
+    }
+
+    private string GetItemText(object? item)
+    {
+        return item switch
+        {
+            ContentControl contentControl => contentControl.Content?.ToString() ?? string.Empty,
+            TextBlock textBlock => textBlock.Text ?? string.Empty,
+            string str => str,
+            null => string.Empty,
+            _ => item.ToString() ?? string.Empty
+        };
     }
 
     #endregion

@@ -102,6 +102,7 @@ public sealed class TestCodeGenerator
                 StepType.AssertChecked => $"            ui.AssertChecked(\"{step.Selector}\", {step.Parameter});{warning}",
                 StepType.AssertVisible => $"            ui.AssertVisible(\"{step.Selector}\");{warning}",
                 StepType.AssertEnabled => $"            ui.AssertEnabled(\"{step.Selector}\");{warning}",
+                StepType.SelectItem => $"            ui.SelectItem(\"{step.Selector}\", \"{EscapeString(step.Parameter ?? "")}\");{warning}",
                 _ => $"            // Unknown step type: {step.Type}"
             };
             sb.AppendLine(line);
