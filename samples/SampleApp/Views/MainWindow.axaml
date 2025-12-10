@@ -3,7 +3,7 @@
         xmlns:vm="using:SampleApp.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
         x:Class="SampleApp.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
@@ -15,39 +15,348 @@
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <StackPanel Margin="20" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <TextBlock Text="Sample Login Form" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+    <TabControl Margin="10">
+        <!-- Basic Controls Tab -->
+        <TabItem Header="Basic Controls">
+            <ScrollViewer>
+                <StackPanel Margin="20" Spacing="15">
+                    <TextBlock Text="Basic Form Controls" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    
+                    <!-- Text Input Section -->
+                    <TextBlock Text="Text Input:" FontWeight="Bold" />
+                    <TextBox AutomationProperties.AutomationId="basic_usernameField" 
+                             Name="BasicUsernameTextBox"
+                             Width="300" 
+                             Watermark="Enter username" />
+                    
+                    <TextBlock Text="Password:" Margin="0,10,0,0" />
+                    <TextBox AutomationProperties.AutomationId="basic_passwordField" 
+                             Name="BasicPasswordTextBox"
+                             Width="300" 
+                             Watermark="Enter password" 
+                             PasswordChar="*" />
+                    
+                    <!-- Selection Controls -->
+                    <TextBlock Text="Selection Controls:" FontWeight="Bold" Margin="0,15,0,0"/>
+                    <ComboBox AutomationProperties.AutomationId="basic_countryCombo" 
+                              Name="CountryComboBox"
+                              Width="300"
+                              PlaceholderText="Select Country">
+                        <ComboBoxItem Content="United States" />
+                        <ComboBoxItem Content="Canada" />
+                        <ComboBoxItem Content="United Kingdom" />
+                        <ComboBoxItem Content="Germany" />
+                        <ComboBoxItem Content="France" />
+                    </ComboBox>
+                    
+                    <StackPanel Orientation="Horizontal" Spacing="20" Margin="0,10,0,0">
+                        <CheckBox AutomationProperties.AutomationId="basic_subscribeCheck" 
+                                  Name="SubscribeCheckBox"
+                                  Content="Subscribe to newsletter" />
+                        
+                        <RadioButton AutomationProperties.AutomationId="basic_genderMale" 
+                                     Name="GenderMaleRadio"
+                                     GroupName="Gender"
+                                     Content="Male" />
+                        <RadioButton AutomationProperties.AutomationId="basic_genderFemale" 
+                                     Name="GenderFemaleRadio"
+                                     GroupName="Gender"
+                                     Content="Female" />
+                    </StackPanel>
+                    
+                    <!-- Action Button -->
+                    <Button AutomationProperties.AutomationId="basic_submitButton" 
+                            Name="BasicSubmitButton"
+                            Content="Submit Form" 
+                            Width="200" 
+                            Margin="0,20,0,0"
+                            Command="{Binding SubmitBasicFormCommand}"/>
+                    
+                    <!-- Status Display -->
+                    <TextBlock AutomationProperties.AutomationId="basic_statusLabel" 
+                               Name="BasicStatusLabel"
+                               Text="{Binding BasicStatusMessage}" 
+                               HorizontalAlignment="Center" 
+                               Margin="0,20,0,0"
+                               FontWeight="Bold" />
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
         
-        <TextBlock Text="Username:" />
-        <TextBox AutomationProperties.AutomationId="usernameField" 
-                 Name="UsernameTextBox"
-                 Width="300" 
-                 Watermark="Enter username" />
+        <!-- Advanced Controls Tab -->
+        <TabItem Header="Advanced Controls">
+            <ScrollViewer>
+                <StackPanel Margin="20" Spacing="15">
+                    <TextBlock Text="Advanced Controls" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    
+                    <!-- Slider and Progress -->
+                    <TextBlock Text="Slider Control:" FontWeight="Bold" />
+                    <Slider AutomationProperties.AutomationId="advanced_slider" 
+                            Name="DemoSlider"
+                            Width="300"
+                            Minimum="0"
+                            Maximum="100"
+                            Value="{Binding SliderValue}" />
+                    <TextBlock AutomationProperties.AutomationId="advanced_sliderValueText"
+                               Text="{Binding SliderValue, StringFormat='Slider Value: {0}'}" 
+                               HorizontalAlignment="Center"/>
+                    
+                    <ProgressBar AutomationProperties.AutomationId="advanced_progressBar" 
+                                 Name="DemoProgressBar"
+                                 Width="300"
+                                 Height="20"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Value="{Binding SliderValue}" />
+                    
+                    <!-- Date Picker -->
+                    <TextBlock Text="Date Picker:" FontWeight="Bold" Margin="0,15,0,0"/>
+                    <DatePicker AutomationProperties.AutomationId="advanced_datePicker" 
+                                Name="DemoDatePicker"
+                                Width="300" />
+                    
+                    <!-- List Box -->
+                    <TextBlock Text="List Box:" FontWeight="Bold" Margin="0,15,0,0"/>
+                    <ListBox AutomationProperties.AutomationId="advanced_itemList" 
+                             Name="ItemListBox"
+                             Width="300"
+                             Height="100"
+                             SelectionMode="Single">
+                        <ListBoxItem AutomationProperties.AutomationId="item_list_1" Content="Item 1" />
+                        <ListBoxItem AutomationProperties.AutomationId="item_list_2" Content="Item 2" />
+                        <ListBoxItem AutomationProperties.AutomationId="item_list_3" Content="Item 3" />
+                        <ListBoxItem AutomationProperties.AutomationId="item_list_4" Content="Item 4" />
+                        <ListBoxItem AutomationProperties.AutomationId="item_list_5" Content="Item 5" />
+                    </ListBox>
+                    
+                    <!-- Tree View -->
+                    <TextBlock Text="Tree View:" FontWeight="Bold" Margin="0,15,0,0"/>
+                    <TreeView AutomationProperties.AutomationId="advanced_treeView" 
+                              Name="DemoTreeView"
+                              Width="300"
+                              Height="120">
+                        <TreeViewItem Header="Root Item 1">
+                            <TreeViewItem Header="Child 1.1" />
+                            <TreeViewItem Header="Child 1.2" />
+                        </TreeViewItem>
+                        <TreeViewItem Header="Root Item 2">
+                            <TreeViewItem Header="Child 2.1" />
+                            <TreeViewItem Header="Child 2.2">
+                                <TreeViewItem Header="Grandchild 2.2.1" />
+                            </TreeViewItem>
+                        </TreeViewItem>
+                    </TreeView>
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
         
-        <TextBlock Text="Password:" Margin="0,10,0,0" />
-        <TextBox AutomationProperties.AutomationId="passwordField" 
-                 Name="PasswordTextBox"
-                 Width="300" 
-                 Watermark="Enter password" 
-                 PasswordChar="*" />
+        <!-- Interactive Controls Tab -->
+        <TabItem Header="Interactive Controls">
+            <ScrollViewer>
+                <StackPanel Margin="20" Spacing="15">
+                    <TextBlock Text="Interactive Controls" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    
+                    <!-- Cascading Controls -->
+                    <TextBlock Text="Cascading Selection:" FontWeight="Bold" />
+                    <ComboBox AutomationProperties.AutomationId="interactive_categoryCombo" 
+                              Name="CategoryComboBox"
+                              Width="300"
+                              PlaceholderText="Select Category"
+                              SelectedIndex="{Binding SelectedCategoryIndex}">
+                        <ComboBoxItem AutomationProperties.AutomationId="category_electronics" Content="Electronics" />
+                        <ComboBoxItem AutomationProperties.AutomationId="category_clothing" Content="Clothing" />
+                        <ComboBoxItem AutomationProperties.AutomationId="category_books" Content="Books" />
+                    </ComboBox>
+                    
+                    <ComboBox AutomationProperties.AutomationId="interactive_subCategoryCombo" 
+                              Name="SubCategoryComboBox"
+                              Width="300"
+                              PlaceholderText="Select Sub-category"
+                              IsEnabled="{Binding IsSubCategoryEnabled}"
+                              ItemsSource="{Binding SubCategoryItems}">
+                        <!-- Items will be populated based on category selection -->
+                    </ComboBox>
+                    
+                    <!-- Real-time Text Update -->
+                    <TextBlock Text="Real-time Text Interaction:" FontWeight="Bold" Margin="0,15,0,0"/>
+                    <TextBox AutomationProperties.AutomationId="interactive_sourceText" 
+                             Name="SourceTextBox"
+                             Width="300"
+                             Watermark="Type here to see real-time update" />
+                    
+                    <TextBlock AutomationProperties.AutomationId="interactive_targetText" 
+                               Name="TargetTextBlock"
+                               Text="{Binding #SourceTextBox.Text}"
+                               HorizontalAlignment="Center"
+                               FontWeight="Bold"
+                               Foreground="Blue" />
+                    
+                    <!-- Dynamic Content -->
+                    <TextBlock Text="Dynamic Content:" FontWeight="Bold" Margin="0,15,0,0"/>
+                    <Button AutomationProperties.AutomationId="interactive_addItemButton" 
+                            Name="AddItemButton"
+                            Content="Add New Item" 
+                            Width="200"
+                            Command="{Binding AddNewItemCommand}" />
+                    
+                    <ListBox AutomationProperties.AutomationId="interactive_dynamicList" 
+                             Name="DynamicListBox"
+                             Width="300"
+                             Height="100"
+                             ItemsSource="{Binding DynamicItems}" />
+                    
+                    <!-- Click Counter -->
+                    <TextBlock Text="Click Counter:" FontWeight="Bold" Margin="0,15,0,0"/>
+                    <Button AutomationProperties.AutomationId="interactive_counterButton" 
+                            Name="CounterButton"
+                            Content="Click Me!" 
+                            Width="200"
+                            Command="{Binding IncrementCounterCommand}" />
+                    
+                    <TextBlock AutomationProperties.AutomationId="interactive_counterDisplay" 
+                               Name="CounterTextBlock"
+                               Text="{Binding ClickCounter, StringFormat='Click Count: {0}'}"
+                               HorizontalAlignment="Center"
+                               FontWeight="Bold"
+                               Foreground="Green" />
+                    
+                    <!-- Toggle Visibility -->
+                    <TextBlock Text="Visibility Control:" FontWeight="Bold" Margin="0,15,0,0"/>
+                    <CheckBox AutomationProperties.AutomationId="interactive_toggleVisibility" 
+                              Name="ToggleVisibilityCheckBox"
+                              Content="Show Secret Message" 
+                              IsChecked="{Binding IsSecretVisible}" />
+                    
+                    <TextBlock AutomationProperties.AutomationId="interactive_secretMessage" 
+                               Name="SecretMessageTextBlock"
+                               Text="This is a secret message!" 
+                               IsVisible="{Binding IsSecretVisible}"
+                               Foreground="Red"
+                               FontWeight="Bold" />
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
         
-        <Button AutomationProperties.AutomationId="loginButton" 
-                Name="LoginButton"
-                Content="Login" 
-                Width="300" 
-                Margin="0,20,0,0"
-                Command="{Binding LoginCommand}" />
+        <!-- Layout Controls Tab -->
+        <TabItem Header="Layout Controls">
+            <ScrollViewer>
+                <StackPanel Margin="20" Spacing="15">
+                    <TextBlock Text="Layout Controls" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    
+                    <!-- Grid Layout -->
+                    <TextBlock Text="Grid Layout:" FontWeight="Bold" />
+                    <Grid AutomationProperties.AutomationId="layout_grid" 
+                          Name="DemoGrid"
+                          Width="300"
+                          Height="150"
+                          ColumnDefinitions="*,*"
+                          RowDefinitions="*,*">
+                        <Button AutomationProperties.AutomationId="layout_grid_button1" 
+                                Content="Button 1" 
+                                Grid.Column="0" 
+                                Grid.Row="0" />
+                        <Button AutomationProperties.AutomationId="layout_grid_button2" 
+                                Content="Button 2" 
+                                Grid.Column="1" 
+                                Grid.Row="0" />
+                        <Button AutomationProperties.AutomationId="layout_grid_button3" 
+                                Content="Button 3" 
+                                Grid.Column="0" 
+                                Grid.Row="1" />
+                        <Button AutomationProperties.AutomationId="layout_grid_button4" 
+                                Content="Button 4" 
+                                Grid.Column="1" 
+                                Grid.Row="1" />
+                    </Grid>
+                    
+                    <!-- Dock Panel -->
+                    <TextBlock Text="Dock Panel:" FontWeight="Bold" Margin="0,15,0,0"/>
+                    <DockPanel AutomationProperties.AutomationId="layout_dockPanel" 
+                               Name="DemoDockPanel"
+                               Width="300"
+                               Height="120">
+                        <Button AutomationProperties.AutomationId="layout_dock_top" 
+                                Content="Top" 
+                                DockPanel.Dock="Top" />
+                        <Button AutomationProperties.AutomationId="layout_dock_bottom" 
+                                Content="Bottom" 
+                                DockPanel.Dock="Bottom" />
+                        <Button AutomationProperties.AutomationId="layout_dock_left" 
+                                Content="Left" 
+                                DockPanel.Dock="Left" />
+                        <Button AutomationProperties.AutomationId="layout_dock_right" 
+                                Content="Right" 
+                                DockPanel.Dock="Right" />
+                        <Button AutomationProperties.AutomationId="layout_dock_center" 
+                                Content="Center" />
+                    </DockPanel>
+                    
+                    <!-- Wrap Panel -->
+                    <TextBlock Text="Wrap Panel:" FontWeight="Bold" Margin="0,15,0,0"/>
+                    <WrapPanel AutomationProperties.AutomationId="layout_wrapPanel" 
+                               Name="DemoWrapPanel"
+                               Width="300">
+                        <Button AutomationProperties.AutomationId="layout_wrap_button1" 
+                                Content="Btn 1" 
+                                Width="80" 
+                                Margin="2" />
+                        <Button AutomationProperties.AutomationId="layout_wrap_button2" 
+                                Content="Btn 2" 
+                                Width="80" 
+                                Margin="2" />
+                        <Button AutomationProperties.AutomationId="layout_wrap_button3" 
+                                Content="Btn 3" 
+                                Width="80" 
+                                Margin="2" />
+                        <Button AutomationProperties.AutomationId="layout_wrap_button4" 
+                                Content="Btn 4" 
+                                Width="80" 
+                                Margin="2" />
+                        <Button AutomationProperties.AutomationId="layout_wrap_button5" 
+                                Content="Btn 5" 
+                                Width="80" 
+                                Margin="2" />
+                    </WrapPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
         
-        <TextBlock AutomationProperties.AutomationId="statusLabel" 
-                   Name="StatusLabel"
-                   Text="{Binding StatusMessage}" 
-                   HorizontalAlignment="Center" 
-                   Margin="0,20,0,0"
-                   FontWeight="Bold" />
-        
-        <TextBlock AutomationProperties.AutomationId="statusLabel" Text="Recording Status:" Margin="0,30,0,0" FontSize="12" Foreground="Gray" HorizontalAlignment="Center"/>
-        <TextBlock Text="Press Ctrl+Shift+R to start/stop recording" FontSize="10" Foreground="Gray" HorizontalAlignment="Center"/>
-        <TextBlock Text="Press Ctrl+Shift+S to save test" FontSize="10" Foreground="Gray" HorizontalAlignment="Center"/>
-    </StackPanel>
-
+        <!-- Original Login Tab (Preserved) -->
+        <TabItem Header="Original Login">
+            <StackPanel Margin="20" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="Sample Login Form" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                
+                <TextBlock Text="Username:" />
+                <TextBox AutomationProperties.AutomationId="usernameField" 
+                         Name="UsernameTextBox"
+                         Width="300" 
+                         Watermark="Enter username" />
+                
+                <TextBlock Text="Password:" Margin="0,10,0,0" />
+                <TextBox AutomationProperties.AutomationId="passwordField" 
+                         Name="PasswordTextBox"
+                         Width="300" 
+                         Watermark="Enter password" 
+                         PasswordChar="*" />
+                
+                <Button AutomationProperties.AutomationId="loginButton" 
+                        Name="LoginButton"
+                        Content="Login" 
+                        Width="300" 
+                        Margin="0,20,0,0"
+                        Command="{Binding LoginCommand}" />
+                
+                <TextBlock AutomationProperties.AutomationId="statusLabel" 
+                           Name="StatusLabel"
+                           Text="{Binding StatusMessage}" 
+                           HorizontalAlignment="Center" 
+                           Margin="0,20,0,0"
+                           FontWeight="Bold" />
+                
+                <TextBlock AutomationProperties.AutomationId="original_statusLabel" Text="Recording Status:" Margin="0,30,0,0" FontSize="12" Foreground="Gray" HorizontalAlignment="Center"/>
+                <TextBlock Text="Press Ctrl+Shift+R to start/stop recording" FontSize="10" Foreground="Gray" HorizontalAlignment="Center"/>
+                <TextBlock Text="Press Ctrl+Shift+S to save test" FontSize="10" Foreground="Gray" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </TabItem>
+    </TabControl>
 </Window>
