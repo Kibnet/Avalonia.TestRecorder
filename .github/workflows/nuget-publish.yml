@@ -100,14 +100,20 @@ jobs:
         if: |
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_nuget == 'true')
-        run: dotnet nuget push "${{ env.OUTPUT_DIR }}/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: |
+          Get-ChildItem -Path ${{ env.OUTPUT_DIR }} -Filter *.nupkg | ForEach-Object {
+            dotnet nuget push $_.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          }
         shell: pwsh
       
       - name: Publish to GitHub Packages
         if: |
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_github == 'true')
-        run: dotnet nuget push "${{ env.OUTPUT_DIR }}/*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --skip-duplicate
+        run: |
+          Get-ChildItem -Path ${{ env.OUTPUT_DIR }} -Filter *.nupkg | ForEach-Object {
+            dotnet nuget push $_.FullName --api-key ${{ secrets.GITHUB_TOKEN }} --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --skip-duplicate
+          }
         shell: pwsh
       
       - name: Upload artifacts
