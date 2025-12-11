@@ -73,37 +73,11 @@ jobs:
         shell: pwsh
       
       - name: Pack Avalonia.HeadlessTestKit
-        run: |
-          dotnet pack src/Avalonia.HeadlessTestKit/Avalonia.HeadlessTestKit.csproj `
-            --configuration ${{ env.CONFIGURATION }} `
-            --no-build `
-            --output ${{ env.OUTPUT_DIR }} `
-            /p:Version=${{ steps.version.outputs.VERSION }} `
-            /p:PackageVersion=${{ steps.version.outputs.VERSION }} `
-            /p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }} `
-            /p:RepositoryType=git `
-            /p:PackageProjectUrl=${{ github.server_url }}/${{ github.repository }} `
-            /p:PackageLicenseExpression=MIT `
-            /p:Authors="${{ vars.PACKAGE_AUTHORS }}" `
-            /p:Company="${{ vars.PACKAGE_COMPANY }}" `
-            /p:Description="${{ vars.HEADLESSTESTKIT_DESCRIPTION }}"
+        run: dotnet pack src/Avalonia.HeadlessTestKit/Avalonia.HeadlessTestKit.csproj --configuration ${{ env.CONFIGURATION }} --no-build --output ${{ env.OUTPUT_DIR }} /p:Version=${{ steps.version.outputs.VERSION }} /p:PackageVersion=${{ steps.version.outputs.VERSION }} /p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }} /p:RepositoryType=git /p:PackageProjectUrl=${{ github.server_url }}/${{ github.repository }} /p:PackageLicenseExpression=MIT /p:Authors="${{ vars.PACKAGE_AUTHORS }}" /p:Company="${{ vars.PACKAGE_COMPANY }}" /p:Description="${{ vars.HEADLESSTESTKIT_DESCRIPTION }}"
         shell: pwsh
       
       - name: Pack Avalonia.TestRecorder
-        run: |
-          dotnet pack src/Avalonia.TestRecorder/Avalonia.TestRecorder.csproj `
-            --configuration ${{ env.CONFIGURATION }} `
-            --no-build `
-            --output ${{ env.OUTPUT_DIR }} `
-            /p:Version=${{ steps.version.outputs.VERSION }} `
-            /p:PackageVersion=${{ steps.version.outputs.VERSION }} `
-            /p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }} `
-            /p:RepositoryType=git `
-            /p:PackageProjectUrl=${{ github.server_url }}/${{ github.repository }} `
-            /p:PackageLicenseExpression=MIT `
-            /p:Authors="${{ vars.PACKAGE_AUTHORS }}" `
-            /p:Company="${{ vars.PACKAGE_COMPANY }}" `
-            /p:Description="${{ vars.TESTRECORDER_DESCRIPTION }}"
+        run: dotnet pack src/Avalonia.TestRecorder/Avalonia.TestRecorder.csproj --configuration ${{ env.CONFIGURATION }} --no-build --output ${{ env.OUTPUT_DIR }} /p:Version=${{ steps.version.outputs.VERSION }} /p:PackageVersion=${{ steps.version.outputs.VERSION }} /p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }} /p:RepositoryType=git /p:PackageProjectUrl=${{ github.server_url }}/${{ github.repository }} /p:PackageLicenseExpression=MIT /p:Authors="${{ vars.PACKAGE_AUTHORS }}" /p:Company="${{ vars.PACKAGE_COMPANY }}" /p:Description="${{ vars.TESTRECORDER_DESCRIPTION }}"
         shell: pwsh
       
       - name: List generated packages
@@ -114,22 +88,14 @@ jobs:
         if: |
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_nuget == 'true')
-        run: |
-          dotnet nuget push "${{ env.OUTPUT_DIR }}/*.nupkg" `
-            --api-key ${{ secrets.NUGET_API_KEY }} `
-            --source https://api.nuget.org/v3/index.json `
-            --skip-duplicate
+        run: dotnet nuget push "${{ env.OUTPUT_DIR }}/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
         shell: pwsh
       
       - name: Publish to GitHub Packages
         if: |
           (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_github == 'true')
-        run: |
-          dotnet nuget push "${{ env.OUTPUT_DIR }}/*.nupkg" `
-            --api-key ${{ secrets.GITHUB_TOKEN }} `
-            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" `
-            --skip-duplicate
+        run: dotnet nuget push "${{ env.OUTPUT_DIR }}/*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --skip-duplicate
         shell: pwsh
       
       - name: Upload artifacts
