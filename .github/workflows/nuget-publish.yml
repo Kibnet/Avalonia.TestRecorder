@@ -73,11 +73,37 @@ jobs:
         shell: pwsh
       
       - name: Pack Avalonia.HeadlessTestKit
-        run: dotnet pack src/Avalonia.HeadlessTestKit/Avalonia.HeadlessTestKit.csproj --configuration ${{ env.CONFIGURATION }} --no-build --output ${{ env.OUTPUT_DIR }} /p:Version=${{ steps.version.outputs.VERSION }} /p:PackageVersion=${{ steps.version.outputs.VERSION }} /p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }} /p:RepositoryType=git /p:PackageProjectUrl=${{ github.server_url }}/${{ github.repository }} /p:PackageLicenseExpression=MIT /p:Authors="${{ vars.PACKAGE_AUTHORS }}" /p:Company="${{ vars.PACKAGE_COMPANY }}" /p:Description="${{ vars.HEADLESSTESTKIT_DESCRIPTION }}"
+        run: |
+          dotnet pack src/Avalonia.HeadlessTestKit/Avalonia.HeadlessTestKit.csproj `
+            --configuration ${{ env.CONFIGURATION }} `
+            --no-build `
+            --output ${{ env.OUTPUT_DIR }} `
+            /p:Version=${{ steps.version.outputs.VERSION }} `
+            /p:PackageVersion=${{ steps.version.outputs.VERSION }} `
+            /p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }} `
+            /p:RepositoryType=git `
+            /p:PackageProjectUrl=${{ github.server_url }}/${{ github.repository }} `
+            /p:PackageLicenseExpression=MIT `
+            '/p:Authors=${{ vars.PACKAGE_AUTHORS }}' `
+            '/p:Company=${{ vars.PACKAGE_COMPANY }}' `
+            '/p:Description=${{ vars.HEADLESSTESTKIT_DESCRIPTION }}'
         shell: pwsh
       
       - name: Pack Avalonia.TestRecorder
-        run: dotnet pack src/Avalonia.TestRecorder/Avalonia.TestRecorder.csproj --configuration ${{ env.CONFIGURATION }} --no-build --output ${{ env.OUTPUT_DIR }} /p:Version=${{ steps.version.outputs.VERSION }} /p:PackageVersion=${{ steps.version.outputs.VERSION }} /p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }} /p:RepositoryType=git /p:PackageProjectUrl=${{ github.server_url }}/${{ github.repository }} /p:PackageLicenseExpression=MIT /p:Authors="${{ vars.PACKAGE_AUTHORS }}" /p:Company="${{ vars.PACKAGE_COMPANY }}" /p:Description="${{ vars.TESTRECORDER_DESCRIPTION }}"
+        run: |
+          dotnet pack src/Avalonia.TestRecorder/Avalonia.TestRecorder.csproj `
+            --configuration ${{ env.CONFIGURATION }} `
+            --no-build `
+            --output ${{ env.OUTPUT_DIR }} `
+            /p:Version=${{ steps.version.outputs.VERSION }} `
+            /p:PackageVersion=${{ steps.version.outputs.VERSION }} `
+            /p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }} `
+            /p:RepositoryType=git `
+            /p:PackageProjectUrl=${{ github.server_url }}/${{ github.repository }} `
+            /p:PackageLicenseExpression=MIT `
+            '/p:Authors=${{ vars.PACKAGE_AUTHORS }}' `
+            '/p:Company=${{ vars.PACKAGE_COMPANY }}' `
+            '/p:Description=${{ vars.TESTRECORDER_DESCRIPTION }}'
         shell: pwsh
       
       - name: List generated packages
