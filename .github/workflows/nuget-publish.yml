@@ -1,0 +1,151 @@
+name: Build and Publish NuGet Packages
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0, v2.1.3, etc.
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions UI
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+      publish_to_nuget:
+        description: 'Publish to NuGet.org'
+        required: true
+        type: boolean
+        default: true
+      publish_to_github:
+        description: 'Publish to GitHub Packages'
+        required: true
+        type: boolean
+        default: true
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  CONFIGURATION: 'Release'
+  OUTPUT_DIR: './artifacts'
+
+jobs:
+  build-and-publish:
+    name: Build and Publish NuGet Packages
+    runs-on: windows-latest
+    
+    permissions:
+      contents: read
+      packages: write  # Required for GitHub Packages publishing
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for GitVersion or similar tools
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $version = "${{ github.event.inputs.version }}"
+          } else {
+            # Extract version from tag (remove 'v' prefix)
+            $version = "${{ github.ref_name }}" -replace '^v', ''
+          }
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "Package version: $version"
+      
+      - name: Restore dependencies
+        run: dotnet restore Avalonia.TestRecorder.sln
+      
+      - name: Build solution
+        run: dotnet build Avalonia.TestRecorder.sln --configuration ${{ env.CONFIGURATION }} --no-restore /p:Version=${{ steps.version.outputs.VERSION }}
+      
+      - name: Run tests
+        run: dotnet test Avalonia.TestRecorder.sln --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+      
+      - name: Create output directory
+        run: New-Item -ItemType Directory -Force -Path ${{ env.OUTPUT_DIR }}
+        shell: pwsh
+      
+      - name: Pack Avalonia.HeadlessTestKit
+        run: |
+          dotnet pack src/Avalonia.HeadlessTestKit/Avalonia.HeadlessTestKit.csproj `
+            --configuration ${{ env.CONFIGURATION }} `
+            --no-build `
+            --output ${{ env.OUTPUT_DIR }} `
+            /p:Version=${{ steps.version.outputs.VERSION }} `
+            /p:PackageVersion=${{ steps.version.outputs.VERSION }} `
+            /p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }} `
+            /p:RepositoryType=git `
+            /p:PackageProjectUrl=${{ github.server_url }}/${{ github.repository }} `
+            /p:PackageLicenseExpression=MIT `
+            /p:Authors="${{ vars.PACKAGE_AUTHORS }}" `
+            /p:Company="${{ vars.PACKAGE_COMPANY }}" `
+            /p:Description="${{ vars.HEADLESSTESTKIT_DESCRIPTION }}"
+        shell: pwsh
+      
+      - name: Pack Avalonia.TestRecorder
+        run: |
+          dotnet pack src/Avalonia.TestRecorder/Avalonia.TestRecorder.csproj `
+            --configuration ${{ env.CONFIGURATION }} `
+            --no-build `
+            --output ${{ env.OUTPUT_DIR }} `
+            /p:Version=${{ steps.version.outputs.VERSION }} `
+            /p:PackageVersion=${{ steps.version.outputs.VERSION }} `
+            /p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }} `
+            /p:RepositoryType=git `
+            /p:PackageProjectUrl=${{ github.server_url }}/${{ github.repository }} `
+            /p:PackageLicenseExpression=MIT `
+            /p:Authors="${{ vars.PACKAGE_AUTHORS }}" `
+            /p:Company="${{ vars.PACKAGE_COMPANY }}" `
+            /p:Description="${{ vars.TESTRECORDER_DESCRIPTION }}"
+        shell: pwsh
+      
+      - name: List generated packages
+        run: Get-ChildItem -Path ${{ env.OUTPUT_DIR }} -Filter *.nupkg
+        shell: pwsh
+      
+      - name: Publish to NuGet.org
+        if: |
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_nuget == 'true')
+        run: |
+          dotnet nuget push "${{ env.OUTPUT_DIR }}/*.nupkg" `
+            --api-key ${{ secrets.NUGET_API_KEY }} `
+            --source https://api.nuget.org/v3/index.json `
+            --skip-duplicate
+        shell: pwsh
+      
+      - name: Publish to GitHub Packages
+        if: |
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_github == 'true')
+        run: |
+          dotnet nuget push "${{ env.OUTPUT_DIR }}/*.nupkg" `
+            --api-key ${{ secrets.GITHUB_TOKEN }} `
+            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" `
+            --skip-duplicate
+        shell: pwsh
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages-${{ steps.version.outputs.VERSION }}
+          path: ${{ env.OUTPUT_DIR }}/*.nupkg
+          retention-days: 90
+      
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.OUTPUT_DIR }}/*.nupkg
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
