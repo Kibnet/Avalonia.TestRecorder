@@ -121,109 +121,19 @@ Secrets are encrypted environment variables used for sensitive data like API key
 
 3. Click **Add secret**
 
-### 2.3 Verify GITHUB_TOKEN
+### 2.3 Summary
 
-The workflow also uses `GITHUB_TOKEN` for publishing to GitHub Packages. This is automatically provided by GitHub Actions and requires no configuration.
+That's it! Package metadata (Authors, Company, Description) is now configured directly in the `.csproj` files, so you don't need to set up GitHub Variables.
 
-**Verification**:
-- The `GITHUB_TOKEN` is available by default
-- No manual setup needed
-- It has permissions configured in the workflow file
+**To modify package metadata**, edit the following files:
+- `src/Avalonia.HeadlessTestKit/Avalonia.HeadlessTestKit.csproj`
+- `src/Avalonia.TestRecorder/Avalonia.TestRecorder.csproj`
 
----
-
-## Step 3: Configure GitHub Variables
-
-Variables are non-sensitive configuration values used in the workflow.
-
-### 3.1 Navigate to Variables
-
-1. In **Settings** → **Secrets and variables** → **Actions**
-2. Click the **Variables** tab
-3. Click **New repository variable** for each variable below
-
-### 3.2 Required Variables
-
-Create the following variables:
-
-#### Variable 1: PACKAGE_AUTHORS
-
-**Name**: 
-```
-PACKAGE_AUTHORS
-```
-
-**Value** (example):
-```
-Your Name, Team Name
-```
-
-**Purpose**: Specifies the package authors shown in NuGet package metadata
+Look for the `<!-- NuGet Package Metadata -->` section in each file.
 
 ---
 
-#### Variable 2: PACKAGE_COMPANY
-
-**Name**: 
-```
-PACKAGE_COMPANY
-```
-
-**Value** (example):
-```
-Your Company Name
-```
-
-**Purpose**: Specifies the company name in package metadata
-
----
-
-#### Variable 3: HEADLESSTESTKIT_DESCRIPTION
-
-**Name**: 
-```
-HEADLESSTESTKIT_DESCRIPTION
-```
-
-**Value** (example):
-```
-Avalonia Headless Test Kit provides utilities for testing Avalonia applications in headless mode without UI rendering.
-```
-
-**Purpose**: Package description for Avalonia.HeadlessTestKit
-
----
-
-#### Variable 4: TESTRECORDER_DESCRIPTION
-
-**Name**: 
-```
-TESTRECORDER_DESCRIPTION
-```
-
-**Value** (example):
-```
-Avalonia Test Recorder enables interactive recording and generation of automated UI tests for Avalonia applications with a visual overlay panel.
-```
-
-**Purpose**: Package description for Avalonia.TestRecorder
-
----
-
-### 3.3 Variables Summary Table
-
-| Variable Name | Type | Required | Purpose | Example Value |
-|--------------|------|----------|---------|---------------|
-| `NUGET_API_KEY` | Secret | ✅ Yes | NuGet.org authentication | `oy2abc...xyz` |
-| `GITHUB_TOKEN` | Secret | ✅ Auto | GitHub Packages auth | *Auto-provided* |
-| `PACKAGE_AUTHORS` | Variable | ✅ Yes | Package author metadata | `John Doe` |
-| `PACKAGE_COMPANY` | Variable | ✅ Yes | Company metadata | `Acme Corp` |
-| `HEADLESSTESTKIT_DESCRIPTION` | Variable | ✅ Yes | HeadlessTestKit description | `Test utilities...` |
-| `TESTRECORDER_DESCRIPTION` | Variable | ✅ Yes | TestRecorder description | `Interactive recording...` |
-
----
-
-## Step 4: Test the Workflow
+## Step 3: Test the Workflow
 
 Before publishing to production, test the workflow.
 
@@ -239,7 +149,7 @@ Before publishing to production, test the workflow.
    - **Publish to GitHub Packages**: ✅ Check
 5. Click **Run workflow**
 
-### 4.2 Monitor Execution
+### 3.2 Monitor Execution
 
 1. Click on the running workflow
 2. Watch each step execute:
@@ -251,13 +161,13 @@ Before publishing to production, test the workflow.
    - ✅ Pack packages
    - ✅ Publish to GitHub Packages (if enabled)
 
-### 4.3 Verify Artifacts
+### 3.3 Verify Artifacts
 
 1. After successful completion, check **Artifacts** section
 2. Download `nuget-packages-1.0.0-test`
 3. Extract and verify `.nupkg` files are present
 
-### 4.4 Verify GitHub Packages
+### 3.4 Verify GitHub Packages
 
 1. Go to repository main page
 2. Look for **Packages** in the right sidebar
@@ -265,9 +175,9 @@ Before publishing to production, test the workflow.
 
 ---
 
-## Step 5: Publishing Workflow
+## Step 4: Publishing Workflow
 
-### 5.1 Publishing via Git Tags (Recommended)
+### 4.1 Publishing via Git Tags (Recommended)
 
 This is the production publishing method.
 
@@ -297,7 +207,7 @@ This is the production publishing method.
    - Check repository Packages
    - Check GitHub Releases
 
-### 5.2 Publishing via Manual Trigger
+### 4.2 Publishing via Manual Trigger
 
 For ad-hoc releases or testing:
 
@@ -309,7 +219,7 @@ For ad-hoc releases or testing:
    - **Publish to GitHub Packages**: ✅ Yes
 4. Click **Run workflow**
 
-### 5.3 Version Numbering
+### 4.3 Version Numbering
 
 Follow [Semantic Versioning](https://semver.org/):
 

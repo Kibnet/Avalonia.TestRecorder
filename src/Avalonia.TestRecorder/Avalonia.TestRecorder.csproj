@@ -5,6 +5,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    
+    <!-- NuGet Package Metadata -->
+    <PackageId>Avalonia.TestRecorder</PackageId>
+    <Authors>Kibnet</Authors>
+    <Company>Kibnet</Company>
+    <Description>Avalonia.TestRecorder is an interactive UI test recorder for Avalonia applications. It overlays a recorder panel on top of your app, captures user interactions and assertions, and generates ready-to-use headless UI tests, reducing the effort required to create and maintain automated UI test suites.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Kibnet/Avalonia.TestRecorder</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/Kibnet/Avalonia.TestRecorder</PackageProjectUrl>
+    <PackageTags>avalonia;testing;test-recorder;ui-testing;test-automation;code-generation</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

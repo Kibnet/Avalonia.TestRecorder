@@ -5,6 +5,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    
+    <!-- NuGet Package Metadata -->
+    <PackageId>Avalonia.HeadlessTestKit</PackageId>
+    <Authors>Kibnet</Authors>
+    <Company>Kibnet</Company>
+    <Description>Avalonia.HeadlessTestKit provides helpers and infrastructure for writing headless UI tests for Avalonia applications, enabling fast, reliable test execution without a visible UI.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Kibnet/Avalonia.TestRecorder</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/Kibnet/Avalonia.TestRecorder</PackageProjectUrl>
+    <PackageTags>avalonia;testing;headless;ui-testing;test-automation</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
