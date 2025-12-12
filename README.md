@@ -109,7 +109,7 @@ Add required packages:
 
 ```bash
 dotnet add package Avalonia.Headless.XUnit
-dotnet add package Avalonia.HeadlessTestKit
+dotnet add package Kibnet.Avalonia.HeadlessTestKit
 ```
 
 Add reference to your application:
