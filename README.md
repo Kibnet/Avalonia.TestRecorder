@@ -29,7 +29,7 @@ This project consists of four main components:
 Add the TestRecorder to your Avalonia desktop app:
 
 ```bash
-dotnet add package Avalonia.TestRecorder
+dotnet add package Kibnet.Avalonia.TestRecorder
 ```
 
 Integrate the recorder in your `App.axaml.cs`:
@@ -271,7 +271,7 @@ The `Ui` class provides fluent methods for interacting with your application:
 
 ```bash
 git clone <repository-url>
-cd Avalonia.TestRecorder
+cd Kibnet.Avalonia.TestRecorder
 dotnet build
 dotnet test
 ```
