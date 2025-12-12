@@ -181,7 +181,7 @@ public class TestAppBuilder
 Add the HeadlessTestKit to your test project (if not already added):
 
 ```bash
-dotnet add package Avalonia.HeadlessTestKit
+dotnet add package Kibnet.Avalonia.HeadlessTestKit
 ```
 
 Example test using the generated code:
